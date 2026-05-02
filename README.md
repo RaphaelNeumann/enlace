@@ -268,34 +268,47 @@ No code change is needed for the domain switch. The Content Security Policy in `
 
 ## Roadmap
 
-### Done
+### Done — v1 ready
+
+The v1 wedding site is functional end-to-end. Couple/Cerimonial sign in at `/login`, manage everything from `/admin/*`, and the public site composes every section dynamically from the DB.
+
+**Foundations**
 
 - Next.js 16 scaffold (TS, Tailwind, App Router, ESLint, src dir, alias `@/*`).
 - shadcn/ui initialized (`base-nova` preset, neutral base color).
-- Drizzle ORM + adapter-compatible schema (users, accounts, sessions, verificationTokens, `user_role` enum).
-- `wedding.config.ts` skeleton (couple, date, venue, ceremony, reception, rsvp deadline, dress code, contact, site).
-- `.env.example` with all required vars.
-- Docker stack: `database`, `app`, `claude` (jail).
-- Security headers: nonce-based CSP in `proxy.ts` + static headers in `next.config.ts`.
-- **Auth.js v5 + Resend** end-to-end: signin page renders, allowlist rejects unknown emails before sending (302 → `?error=AccessDenied`), magic link delivered via Resend, click creates user with correct role and DB-backed session, allowlist token consumed on verification.
-- **Feature specs complete.** All v1 features defined under `docs/features/` with closed decisions. Reference design (`docs/features/theme.md → aquarela-sage` preset) modeled after `/workspace/site.pdf`. Implementation begins next, feature-by-feature, following the TDD workflow above.
+- Drizzle ORM with full schema: users / accounts / sessions / verificationTokens / siteSettings (singleton) / programacaoCards / dressCode / storyContent / faqEntries / tipCategories / tips / gifts / giftMessages / photos / guests / plusOnes.
+- Docker stack: `database`, `app`, `claude` (jail with host Docker socket).
+- Security: nonce-based CSP in `proxy.ts` + Helmet-equivalent static headers in `next.config.ts`.
+- **Auth.js v5 + Resend** end-to-end with custom branded sign-in pages at `/login`, `/login/verify`, `/login/error`.
+- **TDD discipline**: 284 Vitest tests across 34 files (~96% line coverage on logic modules); all admin paths exercised.
 
-### Next (implementation order)
+**Public site (every section composes from the DB and respects its visibility flag)**
 
-The implementation order roughly follows the dependency graph: foundational → sections → admin tooling. Each item below maps 1-to-1 with a feature doc in `docs/features/`.
+- `/` — Hero (monogram + couple names + tracked-caps date + countdown), Programação (Cerimônia + Recepção cards with Google Maps + RSVP CTA), Traje (sub-blocks Mulheres/Homens), Nossa história (sage block + circular photos + prose), Lista de presentes (PIX QR + Mercado Pago Checkout Pro + signed messages), Galeria, Dicas (categories with dialog), FAQ accordion, "Te esperamos!" closing footer.
+- `/rsvp` and `/rsvp/<token>` — public RSVP form (closed-mode typeahead, plus-ones, observation, single-shot rule, rate-limited per IP, gated via `RSVP_ACCESS_TOKEN` with constant-time comparison).
+- `/login*` — custom branded magic-link auth pages.
 
-1. **Test scaffolding** — Vitest config, coverage thresholds, the per-suite ephemeral-schema pattern for Drizzle, MSW setup, Playwright base config.
-2. **`theme.md` + `site-shell.md`** — preset registration, font loading, `siteSettings` table + `/admin/site`, monogram, language toggle, footer.
-3. **`hero-countdown.md`** — first home section.
-4. **`ceremony-reception.md`** — Programação cards.
-5. **`dress-code.md`**, **`story.md`** — remaining cream/sage home sections.
-6. **`location-map.md`** — link helper + SEO schema.
-7. **`tips.md`**, **`gifts.md`** (PIX + Mercado Pago API + messages), **`photo-gallery.md`**.
-8. **`faq.md`** — accordion section.
-9. **`guest-list.md` + `plus-ones.md` + `rsvp-access.md` + `rsvp.md`** — full RSVP pipeline (data model, public form, plus-one mechanics, URL gating).
-10. **`admin-rsvp-list.md` + `admin-rsvp-actions.md` + `admin-observations.md`** — admin reporting + actions.
-11. **`admin-signin.md`** — replaces the default Auth.js page.
-12. `next-intl` setup (woven into items 2-11 as each section ships its bilingual text via the catalog).
+**Admin panel (`COUPLE` and `CEREMONIAL`)**
+
+- `/admin` — dashboard with totals.
+- `/admin/site`, `/admin/programacao`, `/admin/dress-code`, `/admin/story` — singletons + fixed-row CRUD.
+- `/admin/faq`, `/admin/tips`, `/admin/gifts`, `/admin/photos` — list CRUD with reorder + visibility.
+- `/admin/guests` — full CRUD + status transitions + plus-one editing.
+- `/admin/rsvps` — confirmed-attendance roll-up + CSV export.
+- `/admin/observations` — observations list + browser-print PDF route.
+- `/admin/messages` — gift messages joined with the gift title.
+- Image upload everywhere via `<UploadField>` (Supabase signed URL → browser PUT direct to Storage; bypasses Vercel 4.5 MB body limit).
+
+### Backlog (post-v1, when needed)
+
+- next-intl integration (replace the hardcoded `locale="pt"` props with route-based switching using the existing language toggle component).
+- Polish UI to match the reference PDF more closely (watercolor illustrations, monogram SVG per preset, paper texture).
+- Replace the placeholder PIX SVG with a real QR encoder (`qrcode-svg`).
+- Mercado Pago webhooks for live payment confirmation + tracking.
+- Resend templated emails (custom magic-link HTML, optional admin notifications on new RSVPs / messages).
+- Playwright E2E suite (RSVP flow, admin sign-in flow).
+- LGPD privacy page + footer link.
+- Save-the-date sub-route + live photo wall (decided OUT of v1 in feature docs).
 
 ## License
 
