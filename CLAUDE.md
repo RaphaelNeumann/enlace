@@ -24,15 +24,15 @@ Open-source wedding website template. The owner forks the repo, edits a single c
 
 ## Internationalization
 
-- **Public site**: Portuguese (pt-BR) only. Default locale is set in `wedding.config.ts → site.locale`.
-- **Admin panel**: bilingual (pt-BR + en). When implementing, use `next-intl` scoped to the `(admin)` route group. Do not internationalize the public site.
+- **Public site**: bilingual (pt-BR + en). Default locale is `wedding.config.ts → site.locale`; the user can switch via a language toggle in the layout.
+- **Admin panel**: bilingual (pt-BR + en).
+- Implementation: `next-intl` covering both route groups (`(public)` and `(admin)`). Wedding-specific user content (names, venue, story, etc.) lives in `wedding.config.ts` and should be modeled as `{ pt: string; en: string }` objects so forkers translate it once per field. UI strings (buttons, labels, validation messages) live in i18n catalogs at `src/i18n/{pt,en}.json` (or similar) — keep them separate from the wedding config.
 
 ## Codebase language conventions
 
 - **Code, identifiers, comments, docs (README, env files, this file)**: English.
-- **User-facing strings on the public site**: Portuguese (sourced from `wedding.config.ts`).
-- **Admin panel UI strings**: handled via i18n catalogs (pt + en).
-- The maintainer (Raphael) communicates with Claude in Portuguese; written artifacts in the repo stay English.
+- **User-facing strings (both public site and admin)**: handled via i18n catalogs (pt + en).
+- **Wedding content (names, venue, story, etc.)**: stored in `wedding.config.ts` with `{ pt, en }` shape per translatable field.
 
 ## Folder structure
 
@@ -120,9 +120,10 @@ npm run dev
    - Admin panel features (RSVP list, filters, search, manual confirmation, CSV export, dashboard totals).
    - Permissions per role (`COUPLE` vs. `CEREMONIAL`).
 4. Schema for guests/RSVPs (after feature scope is fixed).
-5. `next-intl` setup scoped to `(admin)`.
-6. Public site UI (single locale, Tailwind + shadcn).
-7. Admin panel UI.
+5. `next-intl` setup covering both `(public)` and `(admin)` route groups, with a language toggle component.
+6. Refactor `wedding.config.ts` translatable fields to `{ pt, en }` shape.
+7. Public site UI (bilingual, Tailwind + shadcn).
+8. Admin panel UI.
 
 ### Open questions for the next session
 - Will RSVP allow plus-ones? Free-text dietary restrictions?

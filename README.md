@@ -14,8 +14,7 @@ Open-source wedding website: fork it, edit a single config file, and get your ow
 
 ## Internationalization
 
-- Public site: Portuguese (pt-BR) by default.
-- Admin panel: Portuguese and English.
+Both the public site and the admin panel are bilingual: Portuguese (pt-BR) and English. The default locale is configurable in `src/config/wedding.config.ts`.
 
 ## Getting started (local)
 
