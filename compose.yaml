@@ -56,6 +56,17 @@ services:
       - .:/workspace
       - workspace-node-modules:/workspace/node_modules
       - claude-home:/home/node
+      # Host Docker socket — gives Claude full control over the host's Docker
+      # daemon. Effectively root on the host. Trade-off intentionally accepted
+      # by the project owner; remove this line to restore the jail isolation.
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      # GID of the host's docker group, so the in-container `node` user can
+      # read /var/run/docker.sock without sudo. Override per-host with the env
+      # var DOCKER_GID (run: `stat -c '%g' /var/run/docker.sock` on Linux,
+      # `stat -f '%g' /var/run/docker.sock` on macOS). Defaults to 102 (Debian
+      # bookworm host); 999 is also common (Debian/Ubuntu desktop installs).
+      - "${DOCKER_GID:-102}"
     working_dir: /workspace
     stdin_open: true
     tty: true

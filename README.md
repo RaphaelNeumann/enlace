@@ -1,22 +1,104 @@
 # enlace
 
-Open-source wedding website: fork it, edit a single config file, and get your own site with an RSVP form and admin panel.
+Open-source wedding website template. Fork the repo, edit a single config file, and get a public site (Portuguese) plus an admin panel (Portuguese + English) with RSVP collection. The project is intentionally simple and replicable.
 
 ## Stack
 
-- **Next.js 16** (App Router, Server Components, Server Actions)
-- **TypeScript**
-- **Tailwind CSS v4** + **shadcn/ui**
-- **Drizzle ORM** + **PostgreSQL** (Supabase)
-- **Auth.js v5** (magic link)
-- **Zod** (validation)
-- Deploy: **Vercel**
+- **Next.js 16** (App Router, Server Components, Server Actions). Monolith: SSR + mutations live in the same project, no separate API.
+- **TypeScript** everywhere.
+- **Tailwind CSS v4** + **shadcn/ui** (preset `base-nova`, base color `neutral`, CSS variables, Lucide icons).
+- **Drizzle ORM** + **drizzle-kit** + `postgres` driver. Migrations under `./drizzle`, schema at `src/lib/db/schema.ts`.
+- **Auth.js v5** (`next-auth@beta`) + `@auth/drizzle-adapter`. Magic-link login. Two roles: `COUPLE`, `CEREMONIAL`.
+- **Resend** for transactional email (magic links).
+- **Zod 4** for validation. Schemas shared between forms and Server Actions.
+- **PostgreSQL 16** in production via **Supabase** (used as Postgres + Storage; Auth/Realtime/Edge avoided due to higher lock-in).
+- **Vercel** for hosting (Hobby/free tier).
+- **Vitest** + **React Testing Library** + **MSW** for unit / integration / component tests; **Playwright** for end-to-end smoke flows. Coverage is enforced at ≥ 90 % per feature.
+
+### Why these choices
+
+- Next.js over Rails: bigger JS community → easier for forkers; Vercel one-click deploy; React + Server Actions handle the interactive admin/RSVP well.
+- Drizzle over Prisma: lighter, faster cold starts on serverless, SQL-explicit (good for forkers learning the project).
+- Supabase over Neon: free tier is always-on (Neon caps compute at 190h/month). Supabase also gives Storage on the free tier, which we use for the photo gallery. We avoid Supabase services with high lock-in (Auth, Realtime, Edge Functions).
+- Magic-link auth over passwords: no password storage, simpler for two non-technical users (couple + ceremonial).
+- Vercel free runs functions in `iad1` (US East), so create the Supabase project in `us-east-1` to keep API↔DB latency low. São Paulo (`gru1`) requires Vercel Pro.
+
+## Folder structure
+
+```
+enlace/
+├── compose.yaml                   # database + app + claude (jail profile)
+├── docker/
+│   ├── app.Dockerfile             # node:22-alpine, runs as user `node`
+│   └── claude.Dockerfile          # node:22-bookworm-slim with @anthropic-ai/claude-code + docker CLI
+├── drizzle.config.ts              # drizzle-kit config (uses .env.local)
+├── components.json                # shadcn config
+├── next.config.ts                 # security headers (Helmet equivalents) via headers()
+├── proxy.ts                       # Next.js 16 proxy (formerly middleware.ts) — nonce-based CSP
+├── .env.example                   # template for required env vars
+├── src/
+│   ├── app/
+│   │   ├── (public)/              # public bilingual site (pt + en)
+│   │   ├── (admin)/admin/         # admin panel (pt + en), gated in layout.tsx
+│   │   ├── api/auth/[...nextauth]/  # Auth.js route handler
+│   │   ├── layout.tsx             # awaits headers() to force dynamic rendering (nonce CSP)
+│   │   ├── page.tsx
+│   │   └── globals.css
+│   ├── components/ui/             # shadcn components
+│   ├── config/
+│   │   └── wedding.config.ts      # compile-time config only (theme preset, default locale, rsvp.mode lock)
+│   └── lib/
+│       ├── db/
+│       │   ├── index.ts           # drizzle client (postgres-js, prepare:false for poolers)
+│       │   └── schema.ts          # users, accounts, sessions, verificationTokens, user_role enum
+│       ├── auth/
+│       │   └── index.ts           # NextAuth v5: Drizzle adapter + Resend provider + allowlist
+│       └── utils.ts               # shadcn cn() helper
+└── public/
+```
 
 ## Internationalization
 
 Both the public site and the admin panel are bilingual: Portuguese (pt-BR) and English. The default locale is configurable in `src/config/wedding.config.ts`.
 
-## Getting started (local)
+- **UI strings** (buttons, labels, validation messages) live in i18n catalogs at `src/i18n/{pt,en}.json` (via `next-intl`).
+- **Wedding content** (names, venue, story, FAQ, dress code, etc.) is stored in DB and edited via `/admin`. Each translatable field lives in two columns (`fooPt` + `fooEn`); when `fooEn` is null, the public site falls back to the Portuguese value.
+- A language toggle in the layout switches between locales.
+
+## Editing site content (admin-managed)
+
+After deploy, every editorial field is editable from `/admin` without redeploys:
+
+- `/admin/site` — couple names, wedding date / time / time zone, venue short name, site title, meta description, OG image, section visibility flags.
+- `/admin/site/programacao` — Cerimônia + Recepção cards (date, time, address, Google Maps link, watercolor icon).
+- `/admin/site/dress-code` — headline, intro, women's / men's sub-blocks.
+- `/admin/site/story` — Nossa história body and three photos.
+- `/admin/guests` — full guest CRUD; `/admin/rsvps` — confirmed-attendance list with CSV export; `/admin/observations` — guest observations + PDF print; `/admin/messages` — messages from the gift modal.
+- `/admin/gifts`, `/admin/tips`, `/admin/photo-gallery`, `/admin/faq` — section-specific CRUD.
+
+`src/config/wedding.config.ts` is reserved for compile-time configuration only: the theme preset, the default locale, and the `rsvp.mode` lock. The forker sets these once before first deploy.
+
+## Development workflow (TDD, mandatory)
+
+Every feature follows a strict test-first loop:
+
+1. **Read the spec** in `docs/features/<feature>.md`. The doc is the single source of truth for goal, scope, UX flow, data model, permissions, and decisions.
+2. **Write the test suite first** — Server Action validation, DB invariants, role-based permission denials, edge cases, success / error states. Tests must fail before any implementation lands.
+3. **Implement** until every new test passes (GREEN). Existing tests must continue to pass; no regressions when adding a feature.
+4. **Coverage** is enforced at **≥ 90 % per feature** via `npm run test:coverage`. Branches and functions are tracked but not gated; lines are.
+5. **Tests are frozen.** A test in main is only changed when the underlying spec changes. Editing a green test to make implementation easier is a workflow violation; if a test feels wrong while implementing, the doc is probably wrong — pause and fix the doc first.
+
+Test stack:
+
+- **Vitest** (`vitest`, `@vitest/coverage-v8`) as the runner.
+- **React Testing Library** (`@testing-library/react`, `@testing-library/user-event`) for components.
+- **Drizzle against a real Postgres** for DB tests, using the `database` Docker service with per-suite ephemeral schemas. Drizzle is **not** mocked — schema regressions only show against real Postgres.
+- **MSW** for HTTP-level fakes (Resend, Mercado Pago).
+- **Playwright** for end-to-end flows (public RSVP, magic-link sign-in, gift checkout). Optional but valuable.
+
+Test files co-locate with code (`foo.ts` ↔ `foo.test.ts`). Component tests live next to the component. Server Action tests sit alongside their `actions.ts`. End-to-end tests live in `e2e/`.
+
+## Getting started (local, no Docker)
 
 1. **Fork** this repository.
 2. **Clone** and install:
@@ -25,8 +107,8 @@ Both the public site and the admin panel are bilingual: Portuguese (pt-BR) and E
    cd enlace
    npm install
    ```
-3. **Edit the site content** in `src/config/wedding.config.ts` (names, date, venue, etc.).
-4. **Create a Supabase project** at [supabase.com](https://supabase.com) and copy the connection string.
+3. **Pick a theme preset** in `src/config/wedding.config.ts` (default is `aquarela-sage`, modeled after the reference design in `docs/features/theme.md`).
+4. **Create a Supabase project** at [supabase.com](https://supabase.com) and copy the connection string. Editorial content (couple names, date, venue, etc.) is filled in later via `/admin`, not in this file.
 5. **Set up environment variables**:
    ```bash
    cp .env.example .env.local
@@ -47,7 +129,7 @@ The project ships a Docker stack with three services:
 
 - **database** — PostgreSQL 16 (replaces Supabase locally).
 - **app** — runs the Next.js dev server.
-- **claude** — sandboxed container with the Claude Code CLI installed, for running it in permissive mode without exposing the host. Opt-in via the `jail` profile.
+- **claude** — sandboxed container with the Claude Code CLI installed, opt-in via the `jail` profile.
 
 ```bash
 # Build images and start app + database
@@ -68,11 +150,94 @@ docker compose --profile jail run --rm claude
 
 When using Docker locally, `DATABASE_URL` is set automatically inside the containers (`postgres://enlace:enlace@database:5432/enlace`). Any other variables come from `.env.local` if present.
 
+`node_modules` and `.next` live in named volumes (not the host bind mount) to avoid macOS↔Linux platform mismatch.
+
+### About the `claude` jail container
+
+The container runs as user `node` with `sudo` (NOPASSWD), and the host Docker socket (`/var/run/docker.sock`) is mounted in so Claude can run `docker compose` commands directly. **This trades isolation for convenience** — anything with the Docker socket is effectively root on the host. To restore strict isolation, remove the `/var/run/docker.sock` volume mount and the `group_add` entry from `compose.yaml`.
+
+The `group_add` entry uses the env var `DOCKER_GID` (defaults to 102; check on the host with `stat -c '%g' /var/run/docker.sock` on Linux or `stat -f '%g' /var/run/docker.sock` on macOS — Debian/Ubuntu desktops often use 999).
+
+## Admin login (magic link via Resend)
+
+`/admin` is gated by Auth.js with magic-link sign-in. There are no passwords; clicking the link in the email logs the user in.
+
+Two roles: `COUPLE` (the couple) and `CEREMONIAL` (the wedding planner). Only emails listed in the env vars below can sign in — anyone else who tries is rejected before any email is sent.
+
+1. Create a free account at [resend.com](https://resend.com) and generate an API key (Dashboard → API Keys → Create).
+2. Set `AUTH_RESEND_KEY` in `.env.local` (or in the Vercel dashboard for production).
+3. **Development**: keep `AUTH_EMAIL_FROM="onboarding@resend.dev"`. Resend's sandbox sender only delivers to the email on your Resend account, which is fine while testing locally.
+4. **Production**: add and verify your wedding domain in Resend → Domains, then set `AUTH_EMAIL_FROM` to an address on that domain (e.g. `enlace@your-wedding-domain.com`).
+5. Set the allowlists. Both accept comma- or semicolon-separated lists:
+   ```
+   AUTH_COUPLE_EMAILS="you@example.com;partner@example.com"
+   AUTH_CEREMONIAL_EMAILS="planner@example.com"
+   ```
+6. Generate `AUTH_SECRET` with `npx auth secret` (or `openssl rand -base64 32`).
+7. Set `AUTH_URL=http://localhost:3000` and `AUTH_TRUST_HOST=true` for local dev.
+8. Visit `/api/auth/signin` (or anything under `/admin`, which redirects there).
+
+Operational notes:
+- Sessions are DB-backed (default 30-day expiry). `auth()` queries the DB on every call.
+- Role is written to the DB on first sign-in (`events.createUser`). To change someone's role afterward, update the env var **and** run `UPDATE users SET role = '…' WHERE email = '…'`.
+- Removing an email from the env var rejects future logins but does not invalidate existing sessions. For immediate revocation, delete the user's row from `sessions`.
+
+## Photo gallery (Supabase Storage)
+
+The gallery uses Supabase Storage. Both `COUPLE` and `CEREMONIAL` can upload.
+
+Design decisions:
+
+- **Public bucket** named `gallery`. Wedding photos aren't confidential and signed-URL latency on every page load isn't worth it.
+- **Direct browser upload via signed upload URL.** A Server Action issues a one-time signed URL (using the Service Role key, never exposed to the client); the browser `PUT`s the file directly to Supabase. This avoids Vercel's 4.5 MB Server-Action body limit (modern phone photos exceed that).
+- **`photos` table in Postgres** tracks ordering, captions, and alt text. The bucket itself is a blob store keyed by random IDs. Schema (planned): `id`, `storagePath`, `caption { pt, en }`, `alt { pt, en }`, `position`, `uploadedAt`.
+- **Image optimization via Next.js `<Image>`** with `remotePatterns` pointing at the Supabase URL. Next.js downloads the raw file once, generates WebP and multiple sizes, and serves from the Vercel cache — keeping Supabase bandwidth low (the free tier is 2 GB/month and would otherwise be a bottleneck).
+- **Bucket creation is manual** the first time, via the Supabase dashboard (Storage → New Bucket → name `gallery`, public on). Documented in this README rather than scripted, because Storage doesn't have a clean SQL-migration story.
+
+CSP impact: `proxy.ts` `img-src` needs the bucket origin (`https://<project>.supabase.co`).
+
+## Security model
+
+- **Nonce-based Content Security Policy** in `proxy.ts`. A fresh nonce is generated per request and forwarded to the renderer via the `x-nonce` request header. Next 16 auto-applies it to framework scripts and `next/font` style tags. `script-src 'self' 'nonce-…' 'strict-dynamic'`, `frame-ancestors 'none'`, etc. In dev, `'unsafe-eval'` and `'unsafe-inline'` (styles only) are allowed for React debugging.
+- The proxy matcher excludes `api`, `_next/static`, `_next/image`, `favicon.ico` and link-prefetch requests.
+- `src/app/layout.tsx` calls `await headers()` to force dynamic rendering. Nonce-based CSP is incompatible with static rendering, ISR, and PPR — pages cannot be cached at the CDN.
+- **Adding new external origins** requires editing the CSP in `proxy.ts`:
+  - Resend / magic-link emails: server-side, no CSP change needed.
+  - Supabase Storage gallery: add bucket origin to `img-src`.
+  - Third-party `<script>` (analytics, maps): add origin to `script-src` and pass `nonce={(await headers()).get('x-nonce')}` to the `<Script>` component; backend calls go in `connect-src`.
+- **Static security headers** (HSTS, X-Frame-Options=DENY, COOP/CORP=same-origin, Referrer-Policy, Permissions-Policy, X-Content-Type-Options, etc.) live in `next.config.ts → headers()` — covers the rest of the Helmet defaults.
+- Verifying headers locally:
+  ```bash
+  curl -sI http://localhost:3000/ | grep -iE 'content-security|strict-transport|x-frame|cross-origin|referrer|permissions'
+  ```
+
 ## Deploying to Vercel
 
 1. Import the repository at [vercel.com](https://vercel.com).
-2. Add the environment variables from `.env.local` in the Vercel dashboard.
-3. Deploy.
+2. Use the Supabase **transaction pooler** connection string (port 6543) for `DATABASE_URL` — Vercel functions are short-lived, and the project's Postgres client is configured for that pooler.
+3. Add the environment variables from `.env.local` in the Vercel dashboard. At minimum:
+   - `DATABASE_URL`
+   - `AUTH_SECRET` (regenerate with `npx auth secret`; do not reuse the dev value)
+   - `AUTH_URL` (the production URL — see custom-domain section below)
+   - `AUTH_TRUST_HOST=true` (Vercel runs behind their proxy)
+   - `AUTH_RESEND_KEY`
+   - `AUTH_EMAIL_FROM` (must use a domain verified in Resend — see below)
+   - `AUTH_COUPLE_EMAILS`, `AUTH_CEREMONIAL_EMAILS`
+4. Deploy.
+
+### Using a custom domain
+
+Local development uses `AUTH_URL=http://localhost:3000` and the Resend sandbox sender (`onboarding@resend.dev`), which works without a verified domain. For production with a custom domain (e.g. `enlace.your-domain.com`):
+
+1. Point DNS to Vercel (Vercel dashboard → Domains → Add → follow the DNS instructions). TLS is issued automatically.
+2. In Vercel → Settings → Environment Variables (Production), set `AUTH_URL=https://your-domain.com`. Setting it explicitly avoids edge cases where Vercel's auto-detect picks `*.vercel.app` instead of the custom domain.
+3. In Resend → Domains → Add Domain, paste the DNS records they generate, wait for propagation (usually a few minutes).
+4. Set `AUTH_EMAIL_FROM` to a sender on that domain (e.g. `enlace@your-domain.com`). The sandbox sender only delivers to the email of the Resend account owner — fine for local dev, but unusable in production.
+5. Redeploy.
+
+No code change is needed for the domain switch. The Content Security Policy in `proxy.ts` uses `'self'`, which adapts to whatever origin the site is served from.
+
+> **Heads-up about HSTS.** The project sets `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` in `next.config.ts`. Once a browser visits the production site, it will refuse plain HTTP for the domain (and all subdomains) for two years. Don't break HTTPS afterwards. If you need to roll out gradually, lower `max-age` temporarily and raise it before sharing the site publicly.
 
 ## Scripts
 
@@ -82,6 +247,41 @@ When using Docker locally, `DATABASE_URL` is set automatically inside the contai
 - `npm run db:migrate` — apply migrations
 - `npm run db:push` — sync schema directly to the database (dev)
 - `npm run db:studio` — open Drizzle Studio
+- `npm run test` — run the Vitest suite
+- `npm run test:watch` — Vitest in watch mode
+- `npm run test:coverage` — Vitest with coverage report (gates new features at ≥ 90 % lines)
+- `npm run test:e2e` — Playwright suite (public flows)
+
+## Roadmap
+
+### Done
+
+- Next.js 16 scaffold (TS, Tailwind, App Router, ESLint, src dir, alias `@/*`).
+- shadcn/ui initialized (`base-nova` preset, neutral base color).
+- Drizzle ORM + adapter-compatible schema (users, accounts, sessions, verificationTokens, `user_role` enum).
+- `wedding.config.ts` skeleton (couple, date, venue, ceremony, reception, rsvp deadline, dress code, contact, site).
+- `.env.example` with all required vars.
+- Docker stack: `database`, `app`, `claude` (jail).
+- Security headers: nonce-based CSP in `proxy.ts` + static headers in `next.config.ts`.
+- **Auth.js v5 + Resend** end-to-end: signin page renders, allowlist rejects unknown emails before sending (302 → `?error=AccessDenied`), magic link delivered via Resend, click creates user with correct role and DB-backed session, allowlist token consumed on verification.
+- **Feature specs complete.** All v1 features defined under `docs/features/` with closed decisions. Reference design (`docs/features/theme.md → aquarela-sage` preset) modeled after `/workspace/site.pdf`. Implementation begins next, feature-by-feature, following the TDD workflow above.
+
+### Next (implementation order)
+
+The implementation order roughly follows the dependency graph: foundational → sections → admin tooling. Each item below maps 1-to-1 with a feature doc in `docs/features/`.
+
+1. **Test scaffolding** — Vitest config, coverage thresholds, the per-suite ephemeral-schema pattern for Drizzle, MSW setup, Playwright base config.
+2. **`theme.md` + `site-shell.md`** — preset registration, font loading, `siteSettings` table + `/admin/site`, monogram, language toggle, footer.
+3. **`hero-countdown.md`** — first home section.
+4. **`ceremony-reception.md`** — Programação cards.
+5. **`dress-code.md`**, **`story.md`** — remaining cream/sage home sections.
+6. **`location-map.md`** — link helper + SEO schema.
+7. **`tips.md`**, **`gifts.md`** (PIX + Mercado Pago API + messages), **`photo-gallery.md`**.
+8. **`faq.md`** — accordion section.
+9. **`guest-list.md` + `plus-ones.md` + `rsvp-access.md` + `rsvp.md`** — full RSVP pipeline (data model, public form, plus-one mechanics, URL gating).
+10. **`admin-rsvp-list.md` + `admin-rsvp-actions.md` + `admin-observations.md`** — admin reporting + actions.
+11. **`admin-signin.md`** — replaces the default Auth.js page.
+12. `next-intl` setup (woven into items 2-11 as each section ships its bilingual text via the catalog).
 
 ## License
 

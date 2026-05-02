@@ -1,143 +1,108 @@
 @AGENTS.md
 
-# enlace — project context
+# Working in enlace
 
-Open-source wedding website template. The owner forks the repo, edits a single config file, and gets a public site (Portuguese) plus an admin panel (Portuguese + English) with RSVP collection. The project is intentionally simple and replicable.
+## Read README.md first
 
-## Stack (locked in)
+`README.md` is the single source of truth for application context — stack, folder structure, security model, auth model, deployment, photo-gallery design, roadmap, open questions. Always consult it before answering questions about the project or making non-trivial changes. Treat this file as instructions about *how* to work in the codebase; treat README as the *what*.
 
-- **Next.js 16** — App Router, Server Components, Server Actions. Monolith: SSR + mutations live in the same project, no separate API. Read `node_modules/next/dist/docs/` before writing Next-specific code; this version has breaking changes vs. older training data.
-- **TypeScript** everywhere.
-- **Tailwind CSS v4** + **shadcn/ui** (preset `base-nova`, base color `neutral`, CSS variables, Lucide icons).
-- **Drizzle ORM** + **drizzle-kit** + `postgres` driver. Migrations under `./drizzle`, schema at `src/lib/db/schema.ts`, client at `src/lib/db/index.ts`. Scripts: `db:generate`, `db:migrate`, `db:push`, `db:studio`.
-- **Auth.js v5 beta** (`next-auth@beta`) + `@auth/drizzle-adapter`. Magic link login. Two roles: `COUPLE`, `CEREMONIAL`. Adapter tables (`users`, `accounts`, `sessions`, `verificationTokens`) already in the schema with the `user_role` Postgres enum.
-- **Zod 4** for validation. Share schemas between forms and Server Actions.
-- **PostgreSQL 16** in production via **Supabase** (used as Postgres only, no Supabase Auth/Realtime/Edge — those have higher lock-in). Optionally Supabase Storage for the photo gallery.
-- **Vercel** for hosting (Hobby/free). Vercel free runs functions in `iad1` (US East), so Supabase region should be `us-east-1` to keep API↔DB latency low. São Paulo (`gru1`) requires Vercel Pro.
+## Test-driven workflow (mandatory)
 
-## Stack rationale (decisions made)
+For every feature, follow this loop:
 
-- Next.js over Rails: bigger JS community → easier for forkers; Vercel one-click deploy; React + Server Actions handle the interactive admin/RSVP well.
-- Drizzle over Prisma: lighter, faster cold starts on serverless, SQL-explicit (good for forkers learning the project).
-- Supabase over Neon: free tier is always-on (Neon has a 190h/month compute cap); Supabase also gives Storage for free, useful for the photo gallery. We avoid Supabase services with high lock-in (Auth, Realtime, Edge Functions).
-- Magic link auth over passwords: no password storage, simpler for two non-technical users (couple + ceremonial).
+1. **Read the spec.** Open the relevant doc in `docs/features/<feature>.md`. Internalize the goal, in/out-of-scope list, UX flow, data model, permissions, and decisions sections.
+2. **Write the full test suite first.** Cover every decision and every UX-flow step in the doc — Server Action validation, DB invariants, role-based permission denials, edge cases, error states, success states. The component / route / function under test does not exist yet; tests should fail with `module not found` or `not implemented` errors.
+3. **Run the suite — confirm RED.** Tests must actually fail (proving they exercise the new code path). A test that passes before any code is written is a broken test, not a passing one.
+4. **Implement the feature** until every new test passes (GREEN). Existing tests for other features must continue to pass — no regressions allowed when adding a feature.
+5. **Coverage check.** Run `npm run test:coverage`. Lines covered for the new feature's code must be ≥ **90 %**. Branches and functions tracked but not gated. If coverage falls short, write more tests against existing untested branches; do not delete code to satisfy the threshold.
+6. **Tests are frozen.** Once a test is green, you may not edit it. The only legitimate reason to change a test is when the underlying spec (the feature doc) changes — and that requires editing the doc first, agreeing the change with the user, then updating the test. If a test feels wrong while implementing, the doc is probably wrong; pause and discuss.
 
-## Internationalization
+### Test stack
 
-- **Public site**: bilingual (pt-BR + en). Default locale is `wedding.config.ts → site.locale`; the user can switch via a language toggle in the layout.
-- **Admin panel**: bilingual (pt-BR + en).
-- Implementation: `next-intl` covering both route groups (`(public)` and `(admin)`). Wedding-specific user content (names, venue, story, etc.) lives in `wedding.config.ts` and should be modeled as `{ pt: string; en: string }` objects so forkers translate it once per field. UI strings (buttons, labels, validation messages) live in i18n catalogs at `src/i18n/{pt,en}.json` (or similar) — keep them separate from the wedding config.
+- **Vitest** as the runner (`vitest`, `@vitest/coverage-v8`). ESM-native, fast, TypeScript-first.
+- **React Testing Library** (`@testing-library/react`, `@testing-library/user-event`) for component tests.
+- **Drizzle against a real Postgres** for DB-touching tests. The Docker compose stack already provides a `database` service; tests use a per-suite ephemeral schema (`SET search_path TO test_<random>`) for isolation. Avoid mocking Drizzle — schema regressions only show up against real Postgres.
+- **MSW** (`msw`) for HTTP-level fakes (Resend, Mercado Pago API).
+- **Playwright** for end-to-end smoke tests on the public RSVP flow and the magic-link sign-in. Optional but valuable; skip in PRs that only touch internal logic.
+
+### Test file conventions
+
+- Co-locate unit tests with the code: `foo.ts` ↔ `foo.test.ts`. Component tests live next to the component.
+- Server Action tests go alongside their `actions.ts` files, named `actions.test.ts`.
+- Schema / migration tests live in `src/lib/db/__tests__/`.
+- E2E tests live in `e2e/` at the repo root; one file per high-value flow.
+
+### Coverage scope
+
+Coverage applies to **new feature code** (`src/**` and `proxy.ts`). Excluded by config:
+- Scripts (`scripts/**`).
+- Type-only files (`*.d.ts`).
+- Test files themselves.
+- Boilerplate Next.js files (`next.config.ts`, `app/globals.css`, `layout.tsx` shells with no logic).
+- Generated migration files (`drizzle/**`).
+
+If 90 % feels artificial for a specific file (e.g. an exhaustive switch with `default: throw`), document the exclusion in `vitest.config.ts` with a comment explaining why — don't silently skip.
+
+## Design principle: admin-editable content
+
+**All editorial site content is editable from `/admin`** — couple names, dates, venue, ceremony/reception details, story text, dress-code text, hero copy, FAQ entries, tips, gifts, photos, etc. The forker may seed initial values during setup, but post-deploy edits never require code changes or redeploys. Content lives in DB tables and is exposed via dedicated admin pages.
+
+Exceptions (stay outside the admin):
+- Secrets (`AUTH_SECRET`, `AUTH_RESEND_KEY`, `RSVP_ACCESS_TOKEN`, `PIX_*`, `MERCADO_PAGO_ACCESS_TOKEN`, etc.) — env vars only.
+- Compile-time config: theme preset selection, default locale, `rsvp.mode` lock — `src/config/wedding.config.ts` (couple sets once before first deploy; locked thereafter).
+- Code: routes, components, validation rules — committed.
+
+When designing a new feature doc, default to "admin-managed" for any field a non-technical user might want to fix or update later. Move content out of `wedding.config.ts` into a DB table whenever practical.
 
 ## Codebase language conventions
 
-- **Code, identifiers, comments, docs (README, env files, this file)**: English.
-- **User-facing strings (both public site and admin)**: handled via i18n catalogs (pt + en).
-- **Wedding content (names, venue, story, etc.)**: stored in `wedding.config.ts` with `{ pt, en }` shape per translatable field.
+- Code, identifiers, comments, repo docs (this file, README, env files): **English**.
+- User-facing strings (public site + admin UI): **i18n catalogs** (pt + en) under `src/i18n/`. Never hardcode in components.
+- Editorial content (couple names, venue, story, etc.) is admin-managed in DB (see "Design principle: admin-editable content" above), with each translatable field stored as separate `_pt` / `_en` columns. The TS-file pattern (`{ pt, en }` in `wedding.config.ts`) is reserved for compile-time config only.
 
-## Folder structure
+## Next.js 16 specifics
 
-```
-enlace/
-├── compose.yaml                   # database + app + claude (jail profile)
-├── docker/
-│   ├── app.Dockerfile             # node:22-alpine, runs as user `node`
-│   └── claude.Dockerfile          # node:22-bookworm-slim with @anthropic-ai/claude-code
-├── drizzle.config.ts              # drizzle-kit config (uses .env.local)
-├── components.json                # shadcn config
-├── .env.example                   # template for required env vars
-├── src/
-│   ├── app/
-│   │   ├── (public)/              # public Portuguese site
-│   │   ├── (admin)/admin/         # admin panel (pt + en)
-│   │   ├── api/auth/[...nextauth]/  # Auth.js route handler (TBD)
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── globals.css
-│   ├── components/ui/             # shadcn components
-│   ├── config/
-│   │   └── wedding.config.ts      # SINGLE source of truth for static site content
-│   └── lib/
-│       ├── db/
-│       │   ├── index.ts           # drizzle client (postgres-js, prepare:false for poolers)
-│       │   └── schema.ts          # users, accounts, sessions, verificationTokens, user_role enum
-│       ├── auth/                  # Auth.js config (TBD)
-│       └── utils.ts               # shadcn cn() helper
-└── public/
-```
+- Always consult `node_modules/next/dist/docs/` before using Next APIs — older training data has deprecated patterns. Heed deprecation notices.
+- `middleware.ts` was renamed to `proxy.ts` (project root, same API). Do **not** create `middleware.ts`.
+- `proxy.ts` runs on Edge runtime; `postgres-js` is Node-only — never call the DB from the proxy.
 
-## Local development
+## Server Actions
 
-Two ways to run locally — pick one:
+- `'use server'` files only.
+- Check `auth()` **and** role inside every action. Server Actions are POST endpoints regardless of which UI element calls them.
+- Zod-validate input before touching the DB; share schemas between forms and Server Actions.
+- `revalidatePath` / `revalidateTag` after mutations; `redirect()` from `next/navigation` for post-action redirects.
+- Prefer plain `<form action={...}>` with progressive enhancement; reach for `useActionState` when pending UI is needed.
 
-### Docker (recommended)
+## Database
 
-```bash
-docker compose up --build              # starts database + app on :3000
-docker compose exec app npm run db:push
-docker compose --profile jail run --rm claude   # opens shell in the AI sandbox
-```
+- All access is server-side via Drizzle. Never expose Supabase Service Role key to the client.
+- RLS is on by default in Supabase ("automatic RLS" on, Data API off). Keep it as defense-in-depth even though we only access via the server.
 
-- App: http://localhost:3000
-- DB host port: 5432 (inside the Docker network it's `database:5432`)
-- The `claude` service uses the `jail` profile, so it does NOT start with plain `up`. It is meant for running the Claude Code CLI in permissive mode without exposing the host. It shares the project workspace with the app, but only `/workspace` and the persistent home volume are accessible — no Docker socket, no privileged flags, no host filesystem outside the project.
-- `node_modules` and `.next` live in named volumes (not the host bind mount) to avoid macOS↔Linux platform mismatch.
-- `DATABASE_URL` inside containers is `postgres://enlace:enlace@database:5432/enlace`.
-- `.env.local` is loaded if present (optional).
+## Auth gotchas (when editing auth code)
 
-### Without Docker
+- Sessions are DB-backed (`session: { strategy: "database" }`). `auth()` queries `sessions` join `users` per call.
+- `/admin/*` is gated in `src/app/(admin)/admin/layout.tsx`, **not in `proxy.ts`** (Edge incompatibility with `postgres-js`). If a proxy-level gate is ever needed for non-`/admin` routes, use the Auth.js v5 split-config pattern (Edge-safe config without adapter) — adds complexity, avoid unless required.
+- Allowlist (`AUTH_COUPLE_EMAILS` / `AUTH_CEREMONIAL_EMAILS`) is built once at module load. Changes require a redeploy. If an email appears in both vars, `CEREMONIAL` wins (last-write into the Map).
+- Role is written to the DB in `events.createUser` (first sign-in only). To change a role for an existing user, update the env var **and** run `UPDATE users SET role = '…' WHERE email = '…'`.
+- Removing an email from the env var rejects future logins but does **not** invalidate existing sessions (default 30 days). For immediate revocation, delete the row from `sessions`.
+- Local dev requires `AUTH_URL=http://localhost:3000` and `AUTH_TRUST_HOST=true` in `.env.local`. Without `AUTH_URL`, Auth.js builds callback URLs from the bind address (`http://0.0.0.0:3000/...`) which breaks magic links opened from the browser.
+- Diagnostic gotcha: `/api/auth/*` rejects HEAD with 400 (`UnknownAction: Only GET and POST requests are supported`). Use `curl -G` or `-X GET` instead of `curl -I`.
 
-```bash
-cp .env.example .env.local      # fill DATABASE_URL with Supabase pooler URL
-npm install
-npm run db:push
-npm run dev
-```
+## Security headers / CSP (when adding external origins)
 
-## Deployment
+- Nonce-based CSP lives in `proxy.ts`. The nonce is generated per request and forwarded to the renderer via the `x-nonce` request header — Next 16 auto-applies it to framework scripts and `next/font` style tags.
+- Adding new external origins requires editing the CSP in `proxy.ts`:
+  - Resend / magic-link emails: server-side, no CSP change needed.
+  - Supabase Storage gallery: add the bucket origin to `img-src`.
+  - Third-party `<script>` (analytics, maps): add origin to `script-src` and pass `nonce={(await headers()).get('x-nonce')}` to the `<Script>` component; backend calls go in `connect-src`.
+  - Embedded maps/video/iframes: `frame-src`.
+- Don't add `'unsafe-inline'` or `'unsafe-eval'` outside dev — defeats the policy.
+- Static security headers (HSTS, X-Frame-Options, COOP/CORP, Referrer-Policy, Permissions-Policy, etc.) live in `next.config.ts → headers()`.
+- Nonce-based CSP forces dynamic rendering. `src/app/layout.tsx` calls `await headers()` to opt out of static rendering. Static rendering, ISR, and PPR are incompatible with nonce CSP — if a page needs to be cached at the CDN, it must opt out of CSP.
 
-- Vercel imports the GitHub repo. Add the env vars from `.env.example` in the project settings.
-- Production `DATABASE_URL` should use Supabase's **transaction pooler** (port 6543) since Vercel functions are short-lived; the postgres-js client is configured with `prepare: false` to be compatible with that pooler.
-- `AUTH_URL` must be set to the production URL.
+## Working alongside Docker
 
-## Status
-
-### Done
-- Repo initialized, on GitHub: `git@github.com:RaphaelNeumann/enlace.git` (branch `main`).
-- Next.js 16 scaffold with TS, Tailwind, App Router, ESLint, src dir, alias `@/*`.
-- shadcn/ui initialized (`base-nova` preset, neutral base color).
-- Drizzle ORM configured with adapter-compatible schema (users, accounts, sessions, verificationTokens, `user_role` enum).
-- `wedding.config.ts` skeleton with placeholder fields (couple, date, venue, ceremony, reception, rsvp deadline, dress code, contact, site).
-- `.env.example` with `DATABASE_URL`, `AUTH_SECRET`, optional Resend / Supabase Storage vars.
-- `.gitignore` updated to allow `.env.example` while still ignoring real `.env*`.
-- Docker stack: `database` (postgres:16-alpine), `app` (Next.js dev server), `claude` (jail, opt-in profile). All three validated.
-- README with PT/EN i18n note, fork instructions, Docker instructions, and scripts.
-
-### Next (in order)
-1. **Auth.js v5 setup**: `src/lib/auth/index.ts` (config + adapter + magic link), route handler at `src/app/api/auth/[...nextauth]/route.ts`, `auth()` helper, `middleware.ts` for role-based gating of `/admin`.
-2. Email provider for magic link (Resend recommended). Wire `AUTH_RESEND_KEY` and `AUTH_EMAIL_FROM`.
-3. Define feature scope:
-   - Public site sections (hero/countdown, story, ceremony/reception, gallery, RSVP form, gifts/PIX, dress code, location, FAQ).
-   - Admin panel features (RSVP list, filters, search, manual confirmation, CSV export, dashboard totals).
-   - Permissions per role (`COUPLE` vs. `CEREMONIAL`).
-4. Schema for guests/RSVPs (after feature scope is fixed).
-5. `next-intl` setup covering both `(public)` and `(admin)` route groups, with a language toggle component.
-6. Refactor `wedding.config.ts` translatable fields to `{ pt, en }` shape.
-7. Public site UI (bilingual, Tailwind + shadcn).
-8. Admin panel UI.
-
-### Open questions for the next session
-- Will RSVP allow plus-ones? Free-text dietary restrictions?
-- Does `CEREMONIAL` only manage RSVPs, or also see contact info / messages?
-- Will the gallery be Supabase Storage (server-uploaded by the couple) or just static images in `/public`?
-- Custom domain plans (affects `AUTH_URL` and any CSP).
-
-## Conventions and gotchas
-
-- Next.js 16: always consult `node_modules/next/dist/docs/` before using Next APIs; some patterns from older training data are deprecated.
-- `wedding.config.ts` is the single source of truth for site content. Do not hardcode names/dates/venues in components.
-- Server Actions go in files marked `'use server'`. Always check `auth()` and role inside every action — they are reachable as POST endpoints.
-- Use `revalidatePath` / `revalidateTag` after mutations; `redirect()` from `next/navigation` for post-action redirects.
-- Validation: every Server Action input goes through a Zod schema before touching the DB.
-- Forms: prefer plain `<form action={...}>` with progressive enhancement; reach for `useActionState` when pending UI is needed.
-- Database: never expose Supabase Service Role key to the client. All DB access is server-side via Drizzle.
-- RLS: enabled on Supabase by default ("automatic RLS" on, Data API off) — even though we only access via the server, keep RLS as a defense-in-depth layer.
+- This repo includes a `claude` jail container (compose `jail` profile) where Claude Code runs. The host Docker socket is mounted in, so Claude can run `docker compose` from inside the container (e.g. `docker compose restart app`, `docker compose logs app`). Use `sudo docker …` if `node` user lacks the host's docker GID — see README.
+- The `claude` and `app` services share the project bind mount (`/workspace`). File edits from inside `claude` are immediately visible to `app` via the volume.
+- Restart `app` after changing `.env.local` — Next.js dev server reads `process.env` at boot and does not hot-reload env vars.
