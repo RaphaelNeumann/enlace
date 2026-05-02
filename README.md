@@ -69,12 +69,26 @@ Both the public site and the admin panel are bilingual: Portuguese (pt-BR) and E
 
 After deploy, every editorial field is editable from `/admin` without redeploys:
 
-- `/admin/site` — couple names, wedding date / time / time zone, venue short name, site title, meta description, OG image, section visibility flags.
-- `/admin/site/programacao` — Cerimônia + Recepção cards (date, time, address, Google Maps link, watercolor icon).
-- `/admin/site/dress-code` — headline, intro, women's / men's sub-blocks.
-- `/admin/site/story` — Nossa história body and three photos.
-- `/admin/guests` — full guest CRUD; `/admin/rsvps` — confirmed-attendance list with CSV export; `/admin/observations` — guest observations + PDF print; `/admin/messages` — messages from the gift modal.
-- `/admin/gifts`, `/admin/tips`, `/admin/photo-gallery`, `/admin/faq` — section-specific CRUD.
+- `/admin` — dashboard with totals (confirmados / recusaram / pendentes / mensagens) + quick links.
+- `/admin/site` — couple names, wedding date / time / time zone, venue short name, site title, meta description, OG image flag, section visibility flags.
+- `/admin/programacao` — Cerimônia + Recepção cards (date, time, address, Google Maps link, watercolor icon).
+- `/admin/dress-code` — headline, intro, women's / men's sub-blocks (PT + EN).
+- `/admin/story` — Nossa história body (PT + EN) and three photo storage paths.
+- `/admin/guests` — full guest CRUD with status transitions (confirmar / cancelar confirmação / marcar como recusou) and search/filter by name, status, source.
+- `/admin/rsvps` — confirmed-attendance roll-up with totals, plus-ones inline, CSV export.
+- `/admin/observations` — guest observations list + "Gerar PDF" (browser print-to-PDF route).
+- `/admin/messages` — gift-modal messages joined with the gift title.
+- `/admin/gifts`, `/admin/tips`, `/admin/photos`, `/admin/faq` — section-specific CRUD.
+
+Public visitor routes:
+
+- `/` — composed home (Hero, Programação, Traje, Nossa história, Lista de presentes, Galeria, Dicas, FAQ) gated by visibility flags.
+- `/rsvp` — RSVP form (env-unset = public; env-set = admin-only preview).
+- `/rsvp/<token>` — RSVP form gated by the `RSVP_ACCESS_TOKEN` env var via constant-time comparison; mismatch returns 404.
+
+Admin sign-in:
+
+- `/login` (custom branded page) replaces Auth.js's default `/api/auth/signin`. Magic-link flow stays intact. `pages.signIn`, `pages.verifyRequest`, and `pages.error` are all wired to the `/login*` routes; visiting `/admin/*` while signed out redirects to `/login?callbackUrl=/admin/...`.
 
 `src/config/wedding.config.ts` is reserved for compile-time configuration only: the theme preset, the default locale, and the `rsvp.mode` lock. The forker sets these once before first deploy.
 

@@ -1,24 +1,17 @@
 import { listPhotos } from "@/lib/photos/db";
 import { createPhotoAction, deletePhotoAction, updatePhotoAction } from "./actions";
+import { UploadField } from "@/components/admin/UploadField";
 
 export default async function AdminPhotosPage() {
   const photos = await listPhotos();
   return (
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
       <h1 className="text-2xl font-semibold">Galeria de fotos</h1>
-      <p className="text-xs opacity-70">
-        Faça upload pelo Supabase Studio (bucket <code>gallery</code>) e cole o caminho aqui.
-      </p>
 
       <section className="border rounded p-4 space-y-2">
         <h2 className="text-lg font-medium">Adicionar foto</h2>
         <form action={createPhotoAction} className="space-y-2">
-          <input
-            name="storagePath"
-            required
-            placeholder="gallery/foto-001.jpg"
-            className="w-full rounded border px-3 py-2"
-          />
+          <UploadField bucket="gallery" pathFieldName="storagePath" label="Imagem" />
           <input
             name="captionPt"
             placeholder="Legenda (PT, opcional)"
@@ -50,7 +43,12 @@ export default async function AdminPhotosPage() {
               }}
               className="space-y-2"
             >
-              <input name="storagePath" defaultValue={p.storagePath} className="w-full rounded border px-3 py-2 text-sm" />
+              <UploadField
+                bucket="gallery"
+                pathFieldName="storagePath"
+                defaultPath={p.storagePath}
+                label="Substituir imagem"
+              />
               <input name="captionPt" defaultValue={p.captionPt ?? ""} className="w-full rounded border px-3 py-2 text-sm" />
               <input name="captionEn" defaultValue={p.captionEn ?? ""} className="w-full rounded border px-3 py-2 text-sm" />
               <label className="flex items-center gap-2 text-sm">

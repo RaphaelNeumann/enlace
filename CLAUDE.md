@@ -101,6 +101,47 @@ When designing a new feature doc, default to "admin-managed" for any field a non
 - Static security headers (HSTS, X-Frame-Options, COOP/CORP, Referrer-Policy, Permissions-Policy, etc.) live in `next.config.ts → headers()`.
 - Nonce-based CSP forces dynamic rendering. `src/app/layout.tsx` calls `await headers()` to opt out of static rendering. Static rendering, ISR, and PPR are incompatible with nonce CSP — if a page needs to be cached at the CDN, it must opt out of CSP.
 
+## Server Action conventions (established pattern)
+
+Admin Server Actions follow this shape across the codebase:
+
+```ts
+"use server";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { adminFooBar } from "@/lib/foo/db";
+
+export async function fooBarAction(formData: FormData): Promise<void> {
+  const session = await auth();
+  const obj = fdToObj(formData);   // local helper that handles "on", "", strings
+  await adminFooBar(obj, session); // session is the trailing arg consumed by withAdmin
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/foo");
+}
+```
+
+- Always return `Promise<void>` from form-bound Server Actions so React's
+  `<form action={...}>` typing accepts them.
+- `revalidatePath("/", "layout")` invalidates the home (since it composes
+  most sections). Add per-admin-page revalidation as needed.
+- Admin pages that take a row id use closures: `action={async (fd) => { "use server"; await updateAction(id, fd) }}`.
+
+## Auth gate location
+
+- The auth gate for `/admin/*` lives in `src/app/(admin)/admin/layout.tsx`
+  and redirects unauthenticated/non-admin sessions to `/login?callbackUrl=...`.
+- `/login`, `/login/verify`, `/login/error` are at the top-level (NOT under
+  `/admin`) so they don't conflict with the layout-level gate.
+- Auth.js v5's `pages.signIn` / `verifyRequest` / `error` are configured
+  to point to those custom pages.
+
+## Test DB pool
+
+`src/lib/db/index.ts` sets `postgres-js { max: 3 }` so multiple Vitest
+worker processes can run in parallel without exhausting Postgres
+`max_connections`. If tests hit "sorry, too many clients already" again,
+restart the `database` container or lower `max` further.
+
 ## Working alongside Docker
 
 - This repo includes a `claude` jail container (compose `jail` profile) where Claude Code runs. The host Docker socket is mounted in, so Claude can run `docker compose` from inside the container (e.g. `docker compose restart app`, `docker compose logs app`). Use `sudo docker …` if `node` user lacks the host's docker GID — see README.
