@@ -28,12 +28,12 @@ export async function getGift(id: string, client: typeof db = db): Promise<Gift 
   return rows[0] ?? null;
 }
 
-export async function createGiftInDb(input: unknown, client: typeof db = db): Promise<Gift> {
+export async function createGiftInDb(input: unknown): Promise<Gift> {
   const parsed = giftCreateSchema.parse(input);
-  const [{ next }] = await client
+  const [{ next }] = await db
     .select({ next: sql<number>`coalesce(max(${gifts.position}), -1) + 1` })
     .from(gifts);
-  const inserted = await client
+  const inserted = await db
     .insert(gifts)
     .values({ ...parsed, position: next })
     .returning();
@@ -43,11 +43,10 @@ export async function createGiftInDb(input: unknown, client: typeof db = db): Pr
 export async function updateGiftInDb(
   id: string,
   input: unknown,
-  client: typeof db = db,
 ): Promise<Gift | null> {
   const parsed = giftUpdateSchema.parse(input);
-  if (Object.keys(parsed).length === 0) return getGift(id, client);
-  const updated = await client
+  if (Object.keys(parsed).length === 0) return getGift(id);
+  const updated = await db
     .update(gifts)
     .set({ ...parsed, updatedAt: new Date() })
     .where(eq(gifts.id, id))
@@ -55,14 +54,14 @@ export async function updateGiftInDb(
   return updated[0] ?? null;
 }
 
-export async function deleteGiftInDb(id: string, client: typeof db = db): Promise<boolean> {
-  const deleted = await client.delete(gifts).where(eq(gifts.id, id)).returning({ id: gifts.id });
+export async function deleteGiftInDb(id: string): Promise<boolean> {
+  const deleted = await db.delete(gifts).where(eq(gifts.id, id)).returning({ id: gifts.id });
   return deleted.length > 0;
 }
 
-export async function reorderGiftsInDb(input: unknown, client: typeof db = db): Promise<Gift[]> {
+export async function reorderGiftsInDb(input: unknown): Promise<Gift[]> {
   const parsed = giftReorderSchema.parse(input);
-  await client.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     for (let i = 0; i < parsed.ids.length; i++) {
       await tx
         .update(gifts)
@@ -70,7 +69,7 @@ export async function reorderGiftsInDb(input: unknown, client: typeof db = db): 
         .where(eq(gifts.id, parsed.ids[i]));
     }
   });
-  return listGifts({}, client);
+  return listGifts({});
 }
 
 // Public: anyone (rate-limited at the route layer) can leave a message.

@@ -8,14 +8,14 @@ const SINGLETON_ID = "default";
 
 export type DressCode = typeof dressCode.$inferSelect;
 
-export async function getDressCode(client: typeof db = db): Promise<DressCode> {
-  const rows = await client
+export async function getDressCode(): Promise<DressCode> {
+  const rows = await db
     .select()
     .from(dressCode)
     .where(eq(dressCode.id, SINGLETON_ID))
     .limit(1);
   if (rows.length === 0) {
-    const inserted = await client
+    const inserted = await db
       .insert(dressCode)
       .values({ id: SINGLETON_ID })
       .returning();
@@ -24,12 +24,9 @@ export async function getDressCode(client: typeof db = db): Promise<DressCode> {
   return rows[0];
 }
 
-export async function updateDressCodeInDb(
-  input: unknown,
-  client: typeof db = db,
-): Promise<DressCode> {
+export async function updateDressCodeInDb(input: unknown): Promise<DressCode> {
   const parsed = dressCodeUpdateSchema.parse(input);
-  const updated = await client
+  const updated = await db
     .insert(dressCode)
     .values({ id: SINGLETON_ID, ...parsed, updatedAt: new Date() })
     .onConflictDoUpdate({

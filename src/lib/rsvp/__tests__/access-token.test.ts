@@ -34,13 +34,17 @@ describe("checkAccessToken", () => {
 
 describe("getRsvpAccessToken", () => {
   it("returns trimmed token when set", () => {
-    expect(getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "  xyz  " } as NodeJS.ProcessEnv)).toBe(
-      "xyz",
-    );
+    expect(
+      getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "  xyz  " } as unknown as NodeJS.ProcessEnv),
+    ).toBe("xyz");
   });
   it("returns null when unset / empty", () => {
-    expect(getRsvpAccessToken({} as NodeJS.ProcessEnv)).toBeNull();
-    expect(getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "" } as NodeJS.ProcessEnv)).toBeNull();
-    expect(getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "   " } as NodeJS.ProcessEnv)).toBeNull();
+    expect(getRsvpAccessToken({} as unknown as NodeJS.ProcessEnv)).toBeNull();
+    expect(
+      getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "" } as unknown as NodeJS.ProcessEnv),
+    ).toBeNull();
+    expect(
+      getRsvpAccessToken({ RSVP_ACCESS_TOKEN: "   " } as unknown as NodeJS.ProcessEnv),
+    ).toBeNull();
   });
 });

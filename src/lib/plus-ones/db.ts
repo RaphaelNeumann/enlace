@@ -38,10 +38,9 @@ export class GuestNotFound extends Error {
 export async function replacePlusOnesForGuest(
   guestId: string,
   rawNames: unknown,
-  client: typeof db = db,
 ): Promise<PlusOne[]> {
   const names = plusOneNamesSchema.parse(rawNames);
-  const guestRow = await client
+  const guestRow = await db
     .select({ plusOnesAllowed: guests.plusOnesAllowed })
     .from(guests)
     .where(eq(guests.id, guestId))
@@ -52,7 +51,7 @@ export async function replacePlusOnesForGuest(
   if (names.length > guestRow[0].plusOnesAllowed) {
     throw new PlusOneCapExceeded(guestRow[0].plusOnesAllowed, names.length);
   }
-  return client.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     await tx.delete(plusOnes).where(eq(plusOnes.guestId, guestId));
     if (names.length === 0) return [];
     const inserted = await tx

@@ -8,14 +8,6 @@ const baseInput: BrCodeInput = {
   city: "São Paulo",
 };
 
-function readField(payload: string, tag: string): { value: string; rest: string } | null {
-  const idx = payload.indexOf(tag);
-  if (idx === -1) return null;
-  const len = parseInt(payload.slice(idx + 2, idx + 4), 10);
-  const value = payload.slice(idx + 4, idx + 4 + len);
-  return { value, rest: payload.slice(idx + 4 + len) };
-}
-
 describe("buildBrCode", () => {
   it("starts with the format-indicator and point-of-initiation TLVs", () => {
     const out = buildBrCode(baseInput);

@@ -51,12 +51,12 @@ export async function listVisibleCategoriesWithTips(
     .filter((c) => c.tips.length > 0);
 }
 
-export async function createCategoryInDb(input: unknown, client: typeof db = db): Promise<TipCategory> {
+export async function createCategoryInDb(input: unknown): Promise<TipCategory> {
   const parsed = tipCategoryCreateSchema.parse(input);
-  const [{ next }] = await client
+  const [{ next }] = await db
     .select({ next: sql<number>`coalesce(max(${tipCategories.position}), -1) + 1` })
     .from(tipCategories);
-  const inserted = await client
+  const inserted = await db
     .insert(tipCategories)
     .values({ ...parsed, position: next })
     .returning();
@@ -66,14 +66,13 @@ export async function createCategoryInDb(input: unknown, client: typeof db = db)
 export async function updateCategoryInDb(
   id: string,
   input: unknown,
-  client: typeof db = db,
 ): Promise<TipCategory | null> {
   const parsed = tipCategoryUpdateSchema.parse(input);
   if (Object.keys(parsed).length === 0) {
-    const rows = await client.select().from(tipCategories).where(eq(tipCategories.id, id)).limit(1);
+    const rows = await db.select().from(tipCategories).where(eq(tipCategories.id, id)).limit(1);
     return rows[0] ?? null;
   }
-  const updated = await client
+  const updated = await db
     .update(tipCategories)
     .set({ ...parsed, updatedAt: new Date() })
     .where(eq(tipCategories.id, id))
@@ -81,21 +80,21 @@ export async function updateCategoryInDb(
   return updated[0] ?? null;
 }
 
-export async function deleteCategoryInDb(id: string, client: typeof db = db): Promise<boolean> {
-  const deleted = await client
+export async function deleteCategoryInDb(id: string): Promise<boolean> {
+  const deleted = await db
     .delete(tipCategories)
     .where(eq(tipCategories.id, id))
     .returning({ id: tipCategories.id });
   return deleted.length > 0;
 }
 
-export async function createTipInDb(input: unknown, client: typeof db = db): Promise<Tip> {
+export async function createTipInDb(input: unknown): Promise<Tip> {
   const parsed = tipCreateSchema.parse(input);
-  const [{ next }] = await client
+  const [{ next }] = await db
     .select({ next: sql<number>`coalesce(max(${tips.position}), -1) + 1` })
     .from(tips)
     .where(eq(tips.categoryId, parsed.categoryId));
-  const inserted = await client
+  const inserted = await db
     .insert(tips)
     .values({ ...parsed, position: next })
     .returning();
@@ -105,14 +104,13 @@ export async function createTipInDb(input: unknown, client: typeof db = db): Pro
 export async function updateTipInDb(
   id: string,
   input: unknown,
-  client: typeof db = db,
 ): Promise<Tip | null> {
   const parsed = tipUpdateSchema.parse(input);
   if (Object.keys(parsed).length === 0) {
-    const rows = await client.select().from(tips).where(eq(tips.id, id)).limit(1);
+    const rows = await db.select().from(tips).where(eq(tips.id, id)).limit(1);
     return rows[0] ?? null;
   }
-  const updated = await client
+  const updated = await db
     .update(tips)
     .set({ ...parsed, updatedAt: new Date() })
     .where(eq(tips.id, id))
@@ -120,14 +118,14 @@ export async function updateTipInDb(
   return updated[0] ?? null;
 }
 
-export async function deleteTipInDb(id: string, client: typeof db = db): Promise<boolean> {
-  const deleted = await client.delete(tips).where(eq(tips.id, id)).returning({ id: tips.id });
+export async function deleteTipInDb(id: string): Promise<boolean> {
+  const deleted = await db.delete(tips).where(eq(tips.id, id)).returning({ id: tips.id });
   return deleted.length > 0;
 }
 
-export async function reorderCategoriesInDb(input: unknown, client: typeof db = db): Promise<TipCategory[]> {
+export async function reorderCategoriesInDb(input: unknown): Promise<TipCategory[]> {
   const parsed = reorderSchema.parse(input);
-  await client.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     for (let i = 0; i < parsed.ids.length; i++) {
       await tx
         .update(tipCategories)
@@ -135,7 +133,7 @@ export async function reorderCategoriesInDb(input: unknown, client: typeof db = 
         .where(eq(tipCategories.id, parsed.ids[i]));
     }
   });
-  return listCategories(client);
+  return listCategories();
 }
 
 export const adminCreateCategory = withAdmin(createCategoryInDb);

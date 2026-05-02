@@ -43,12 +43,11 @@ export async function getProgramacaoCard(
 export async function updateProgramacaoCardInDb(
   rawId: unknown,
   input: unknown,
-  client: typeof db = db,
 ): Promise<ProgramacaoCard> {
   const id = programacaoCardIdSchema.parse(rawId);
   const parsed = programacaoCardUpdateSchema.parse(input);
-  await ensureProgramacaoSeeded(client);
-  const updated = await client
+  await ensureProgramacaoSeeded(db);
+  const updated = await db
     .update(programacaoCards)
     .set({ ...parsed, updatedAt: new Date() })
     .where(eq(programacaoCards.id, id))

@@ -3,7 +3,7 @@ import { createRateLimiter } from "./rate-limit";
 
 describe("createRateLimiter", () => {
   it("allows up to N hits within the window", () => {
-    let now = 1_000_000;
+    const now = 1_000_000;
     const rl = createRateLimiter({ max: 3, windowMs: 60_000, now: () => now });
     expect(rl.check("ip-a")).toEqual({ ok: true, remaining: 2 });
     expect(rl.check("ip-a")).toEqual({ ok: true, remaining: 1 });
@@ -11,7 +11,7 @@ describe("createRateLimiter", () => {
   });
 
   it("denies the (N+1)th hit and reports retryAfterMs", () => {
-    let now = 0;
+    const now = 0;
     const rl = createRateLimiter({ max: 2, windowMs: 60_000, now: () => now });
     rl.check("k");
     rl.check("k");
@@ -33,7 +33,7 @@ describe("createRateLimiter", () => {
   });
 
   it("isolates buckets per key", () => {
-    let now = 0;
+    const now = 0;
     const rl = createRateLimiter({ max: 1, windowMs: 60_000, now: () => now });
     expect(rl.check("a").ok).toBe(true);
     expect(rl.check("b").ok).toBe(true);
@@ -42,7 +42,7 @@ describe("createRateLimiter", () => {
   });
 
   it("reset() drops a key's bucket", () => {
-    let now = 0;
+    const now = 0;
     const rl = createRateLimiter({ max: 1, windowMs: 60_000, now: () => now });
     rl.check("k");
     expect(rl.check("k").ok).toBe(false);

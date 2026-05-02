@@ -100,23 +100,19 @@ export async function searchGuestsForTypeahead(
   return rows;
 }
 
-export async function createGuestInDb(
-  input: unknown,
-  client: typeof db = db,
-): Promise<Guest> {
+export async function createGuestInDb(input: unknown): Promise<Guest> {
   const parsed = guestCreateSchema.parse(input);
-  const inserted = await client.insert(guests).values(parsed).returning();
+  const inserted = await db.insert(guests).values(parsed).returning();
   return inserted[0];
 }
 
 export async function updateGuestInDb(
   id: string,
   input: unknown,
-  client: typeof db = db,
 ): Promise<Guest | null> {
   const parsed = guestUpdateSchema.parse(input);
-  if (Object.keys(parsed).length === 0) return getGuest(id, client);
-  const updated = await client
+  if (Object.keys(parsed).length === 0) return getGuest(id);
+  const updated = await db
     .update(guests)
     .set({ ...parsed, updatedAt: new Date() })
     .where(eq(guests.id, id))
@@ -124,11 +120,8 @@ export async function updateGuestInDb(
   return updated[0] ?? null;
 }
 
-export async function deleteGuestInDb(
-  id: string,
-  client: typeof db = db,
-): Promise<boolean> {
-  const deleted = await client
+export async function deleteGuestInDb(id: string): Promise<boolean> {
+  const deleted = await db
     .delete(guests)
     .where(eq(guests.id, id))
     .returning({ id: guests.id });
@@ -145,10 +138,9 @@ export async function deleteGuestInDb(
 export async function setRsvpStatusInDb(
   id: string,
   rawStatus: unknown,
-  client: typeof db = db,
 ): Promise<Guest | null> {
   const status = rsvpStatusSchema.parse(rawStatus);
-  const existing = await getGuest(id, client);
+  const existing = await getGuest(id);
   if (!existing) return null;
   let nextSubmittedAt = existing.rsvpSubmittedAt;
   if (status === "confirmed") {
@@ -156,7 +148,7 @@ export async function setRsvpStatusInDb(
   } else if (status === "pending") {
     nextSubmittedAt = null;
   }
-  const updated = await client
+  const updated = await db
     .update(guests)
     .set({
       rsvpStatus: status,

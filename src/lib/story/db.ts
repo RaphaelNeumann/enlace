@@ -8,14 +8,14 @@ const SINGLETON_ID = "default";
 
 export type StoryContent = typeof storyContent.$inferSelect;
 
-export async function getStoryContent(client: typeof db = db): Promise<StoryContent> {
-  const rows = await client
+export async function getStoryContent(): Promise<StoryContent> {
+  const rows = await db
     .select()
     .from(storyContent)
     .where(eq(storyContent.id, SINGLETON_ID))
     .limit(1);
   if (rows.length === 0) {
-    const inserted = await client
+    const inserted = await db
       .insert(storyContent)
       .values({ id: SINGLETON_ID })
       .returning();
@@ -24,12 +24,9 @@ export async function getStoryContent(client: typeof db = db): Promise<StoryCont
   return rows[0];
 }
 
-export async function updateStoryInDb(
-  input: unknown,
-  client: typeof db = db,
-): Promise<StoryContent> {
+export async function updateStoryInDb(input: unknown): Promise<StoryContent> {
   const parsed = storyUpdateSchema.parse(input);
-  const updated = await client
+  const updated = await db
     .insert(storyContent)
     .values({ id: SINGLETON_ID, ...parsed, updatedAt: new Date() })
     .onConflictDoUpdate({

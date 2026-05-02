@@ -156,7 +156,7 @@ describe("setRsvpStatusInDb", () => {
   it("declined preserves rsvpSubmittedAt unchanged", async () => {
     const created = await createGuestInDb({ firstName: "A", lastName: "B" });
     const confirmed = await setRsvpStatusInDb(created.id, "confirmed");
-    const original = confirmed?.rsvpSubmittedAt!;
+    const original = confirmed!.rsvpSubmittedAt!;
     const declined = await setRsvpStatusInDb(created.id, "declined");
     expect(declined?.rsvpStatus).toBe("declined");
     expect(declined?.rsvpSubmittedAt?.getTime()).toBe(original.getTime());
