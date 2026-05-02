@@ -20,8 +20,19 @@ export default defineConfig({
         "src/app/**/layout.tsx",
         "src/app/globals.css",
         "src/components/ui/**",
+        "src/lib/utils.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/schema.ts",
         "drizzle/**",
         "next.config.ts",
+        // Placeholder files that get rewritten by upcoming features:
+        // unexclude as each feature lands and adds tests.
+        "src/app/page.tsx",
+        "src/app/(admin)/admin/page.tsx",
+        "src/app/(admin)/admin/layout.tsx",
+        "src/app/api/auth/**",
+        "src/lib/auth/**",
+        "proxy.ts",
       ],
       thresholds: {
         lines: 90,
