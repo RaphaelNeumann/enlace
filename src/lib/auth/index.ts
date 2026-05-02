@@ -54,6 +54,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "database" },
+  pages: {
+    signIn: "/login",
+    verifyRequest: "/login/verify",
+    error: "/login/error",
+  },
   callbacks: {
     signIn({ user }) {
       const email = user.email?.toLowerCase();

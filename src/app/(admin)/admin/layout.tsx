@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { isAdminRole } from "@/lib/server-auth/assert-role";
 
 export default async function AdminLayout({
   children,
@@ -8,8 +9,8 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  if (!session?.user) {
-    redirect("/api/auth/signin?callbackUrl=/admin");
+  if (!isAdminRole(session?.user?.role)) {
+    redirect("/login?callbackUrl=/admin");
   }
   return <>{children}</>;
 }

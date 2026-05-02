@@ -5,7 +5,9 @@ import { listProgramacao } from "@/lib/programacao/db";
 import { listFaq } from "@/lib/faq/db";
 import { listVisibleCategoriesWithTips } from "@/lib/tips/db";
 import { listGifts } from "@/lib/gifts/db";
+import { listPhotos } from "@/lib/photos/db";
 import { Hero } from "@/components/sections/hero";
+import { PhotoGallerySection } from "@/components/sections/photo-gallery";
 import { Programacao } from "@/components/sections/programacao";
 import { DressCodeSection } from "@/components/sections/dress-code";
 import { Story } from "@/components/sections/story";
@@ -25,7 +27,7 @@ function rsvpHrefFromEnv(): string {
 }
 
 export default async function HomePage() {
-  const [settings, programacao, dress, story, faq, tipCategories, gifts] =
+  const [settings, programacao, dress, story, faq, tipCategories, gifts, photos] =
     await Promise.all([
       getSiteSettings(),
       listProgramacao(),
@@ -34,6 +36,7 @@ export default async function HomePage() {
       listFaq({ onlyVisible: true }),
       listVisibleCategoriesWithTips(),
       listGifts({ onlyVisible: true }),
+      listPhotos({ onlyVisible: true }),
     ]);
   const coupleNames = formatCoupleNames({
     partner1Name: settings.partner1Name,
@@ -83,6 +86,9 @@ export default async function HomePage() {
         />
       ) : null}
       {settings.showTips ? <TipsSection categories={tipCategories} locale="pt" /> : null}
+      {settings.showPhotoGallery ? (
+        <PhotoGallerySection photos={photos} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
+      ) : null}
       {settings.showFaq ? <FaqSection entries={faq} locale="pt" /> : null}
 
       <SiteFooter

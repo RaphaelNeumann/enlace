@@ -8,6 +8,7 @@ const ADMIN_LINKS = [
   { href: "/admin/dress-code", label: "Traje" },
   { href: "/admin/story", label: "Nossa história" },
   { href: "/admin/gifts", label: "Lista de presentes" },
+  { href: "/admin/photos", label: "Galeria de fotos" },
   { href: "/admin/tips", label: "Dicas" },
   { href: "/admin/faq", label: "FAQ" },
   { href: "/admin/guests", label: "Convidados" },
