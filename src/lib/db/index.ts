@@ -6,6 +6,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
 
-const client = postgres(process.env.DATABASE_URL, { prepare: false });
+// Vitest spawns multiple worker processes; each gets its own client.
+// Keep the pool small to avoid exhausting the dev Postgres `max_connections`.
+const client = postgres(process.env.DATABASE_URL, { prepare: false, max: 3 });
 
 export const db = drizzle(client, { schema });
