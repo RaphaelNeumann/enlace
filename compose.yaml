@@ -1,0 +1,69 @@
+name: enlace
+
+services:
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: enlace
+      POSTGRES_USER: enlace
+      POSTGRES_PASSWORD: enlace
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enlace -d enlace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://enlace:enlace@database:5432/enlace
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+    env_file:
+      - path: .env.local
+        required: false
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+      - workspace-node-modules:/workspace/node_modules
+      - workspace-next:/workspace/.next
+    working_dir: /workspace
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+    depends_on:
+      database:
+        condition: service_healthy
+
+  claude:
+    build:
+      context: .
+      dockerfile: docker/claude.Dockerfile
+    environment:
+      DATABASE_URL: postgres://enlace:enlace@database:5432/enlace
+    env_file:
+      - path: .env.local
+        required: false
+    volumes:
+      - .:/workspace
+      - workspace-node-modules:/workspace/node_modules
+      - claude-home:/home/node
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    profiles: ["jail"]
+    command: ["bash"]
+
+volumes:
+  db-data:
+  workspace-node-modules:
+  workspace-next:
+  claude-home:
