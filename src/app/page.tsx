@@ -52,6 +52,10 @@ export default async function HomePage() {
   // falls back to "BRASIL" / "RECIPIENT" when city/name are missing.
   const pixCity = process.env.PIX_CITY?.trim() || "BRASIL";
   const hasMercadoPago = Boolean(process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim());
+  const mercadoPagoPublicKey =
+    process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY?.trim() || null;
+  const turnstileSiteKey =
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || null;
   const pixBrCodeMap: Record<string, ReturnType<typeof renderPix> | null> = {};
   if (pixKey) {
     for (const g of gifts) {
@@ -92,6 +96,8 @@ export default async function HomePage() {
           pixKey={pixKey}
           pixRecipient={pixRecipient}
           hasMercadoPago={hasMercadoPago}
+          mercadoPagoPublicKey={mercadoPagoPublicKey}
+          turnstileSiteKey={turnstileSiteKey}
           supabaseProjectUrl={supabaseProjectUrl}
           createMpCheckoutAction={createGiftCheckoutAction}
           submitMessageAction={submitGiftMessageAction}
@@ -99,10 +105,10 @@ export default async function HomePage() {
         />
       ) : null}
       {settings.showTips ? <TipsSection categories={tipCategories} locale="pt" /> : null}
+      {settings.showFaq ? <FaqSection entries={faq} locale="pt" /> : null}
       {settings.showPhotoGallery ? (
         <PhotoGallerySection photos={photos} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
       ) : null}
-      {settings.showFaq ? <FaqSection entries={faq} locale="pt" /> : null}
 
       <SiteFooter
         closingText="Te esperamos!"

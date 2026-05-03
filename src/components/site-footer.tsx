@@ -35,18 +35,31 @@ export function SiteFooter({
   privacyLabel = "Privacidade",
 }: SiteFooterProps) {
   return (
-    <footer className="text-center py-12">
+    <footer
+      className="text-center py-20 px-6"
+      style={{
+        // Same sage tint used by Programação and FAQ — gives the closing
+        // band a clear visual stop on top of the paper texture.
+        backgroundColor: "color-mix(in srgb, #7c8150 55%, transparent)",
+      }}
+    >
       <p
         style={{ fontFamily: "var(--font-display, serif)" }}
-        className="text-3xl"
+        className="text-7xl md:text-8xl"
       >
         {closingText}
       </p>
-      <p className="mt-6 text-sm opacity-70">
+      <p
+        className="mt-8 text-lg md:text-xl tracking-[0.18em] uppercase"
+        style={{ fontFamily: "var(--font-caps)" }}
+      >
         {coupleNames ? `${coupleNames} · ${year}` : year}
       </p>
       {privacyHref ? (
-        <p className="mt-2 text-xs opacity-60">
+        <p
+          className="mt-3 text-xs tracking-[0.16em] uppercase opacity-70"
+          style={{ fontFamily: "var(--font-caps)" }}
+        >
           <a href={privacyHref}>{privacyLabel}</a>
         </p>
       ) : null}

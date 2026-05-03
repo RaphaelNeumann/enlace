@@ -8,7 +8,7 @@ export default async function AdminObservationsPage({
   const sp = await searchParams;
   const rows = await listGuestsWithObservations({ search: sp.q ?? null });
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Observações</h1>
         <a

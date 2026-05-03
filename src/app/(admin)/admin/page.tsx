@@ -1,21 +1,7 @@
 import { auth, signOut } from "@/lib/auth";
 import { listGuests } from "@/lib/guests/db";
 import { listGiftMessages } from "@/lib/gifts/db";
-
-const ADMIN_LINKS = [
-  { href: "/admin/site", label: "Configurações do site" },
-  { href: "/admin/programacao", label: "Programação" },
-  { href: "/admin/dress-code", label: "Traje" },
-  { href: "/admin/story", label: "Nossa história" },
-  { href: "/admin/gifts", label: "Lista de presentes" },
-  { href: "/admin/photos", label: "Galeria de fotos" },
-  { href: "/admin/tips", label: "Dicas" },
-  { href: "/admin/faq", label: "FAQ" },
-  { href: "/admin/guests", label: "Convidados" },
-  { href: "/admin/rsvps", label: "Confirmados" },
-  { href: "/admin/observations", label: "Observações" },
-  { href: "/admin/messages", label: "Mensagens" },
-];
+import { ADMIN_LINKS } from "@/components/admin/admin-links";
 
 export default async function AdminHomePage() {
   const session = await auth();
@@ -25,7 +11,7 @@ export default async function AdminHomePage() {
   const declined = guests.filter((g) => g.rsvpStatus === "declined").length;
   const pending = guests.filter((g) => g.rsvpStatus === "pending").length;
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Painel</h1>
         <div className="text-sm">

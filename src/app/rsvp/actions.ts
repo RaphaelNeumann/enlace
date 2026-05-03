@@ -6,6 +6,7 @@ import { searchGuestsForTypeahead } from "@/lib/guests/db";
 import { submitRsvp, type SubmitResult } from "@/lib/rsvp/submit";
 import { wedding } from "@/config/wedding.config";
 import { createRateLimiter } from "@/lib/rate-limit/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 
 const limiter = createRateLimiter({ max: 10, windowMs: 60 * 60 * 1000 });
 
@@ -17,6 +18,7 @@ export async function searchAction(prefix: string) {
 export async function submitRsvpAction(formData: FormData): Promise<
   | SubmitResult
   | { ok: false; error: { kind: "rateLimited"; retryAfterMs: number } }
+  | { ok: false; error: { kind: "captchaFailed" } }
 > {
   const headerList = await headers();
   const ip =
@@ -26,6 +28,16 @@ export async function submitRsvpAction(formData: FormData): Promise<
   const limit = limiter.check(ip);
   if (!limit.ok) {
     return { ok: false, error: { kind: "rateLimited", retryAfterMs: limit.retryAfterMs } };
+  }
+  // Captcha is always required when Turnstile is configured — both the
+  // RSVP and the message-to-couple flows enforce the same gate.
+  if (process.env.TURNSTILE_SECRET_KEY?.trim()) {
+    const token = formData.get("turnstileToken");
+    const v = await verifyTurnstileToken(
+      typeof token === "string" ? token : null,
+      ip === "unknown" ? undefined : ip,
+    );
+    if (!v.ok) return { ok: false, error: { kind: "captchaFailed" } };
   }
   const plusOneNames: string[] = [];
   for (const [key, value] of formData.entries()) {

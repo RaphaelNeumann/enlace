@@ -9,9 +9,14 @@ export interface UploadFieldProps {
   pathFieldName: string;
   defaultPath?: string | null;
   label?: string;
+  /** When true, the path input is `required` — the form can't be submitted
+   *  with an empty path. Use on screens whose Zod schema rejects missing
+   *  paths (e.g. photo gallery), so we surface the constraint in the
+   *  browser instead of bouncing back from the server with a ZodError. */
+  required?: boolean;
 }
 
-export function UploadField({ bucket, pathFieldName, defaultPath, label }: UploadFieldProps) {
+export function UploadField({ bucket, pathFieldName, defaultPath, label, required }: UploadFieldProps) {
   const [path, setPath] = useState<string>(defaultPath ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -58,6 +63,7 @@ export function UploadField({ bucket, pathFieldName, defaultPath, label }: Uploa
         onChange={(e) => setPath(e.target.value)}
         placeholder="Ou cole o caminho no Storage"
         className="w-full rounded border px-3 py-2 text-sm"
+        required={required}
       />
       {pending ? <p className="text-xs opacity-70">Enviando...</p> : null}
       {error ? <p className="text-xs" style={{ color: "var(--color-accent)" }}>{error}</p> : null}

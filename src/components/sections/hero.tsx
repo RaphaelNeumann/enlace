@@ -77,7 +77,7 @@ export function Hero({
         }}
       >
         <div className="px-8 py-12 space-y-8">
-          <div>
+          <div className="hidden md:block">
             {monogramImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

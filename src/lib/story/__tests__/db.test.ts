@@ -19,7 +19,7 @@ describe("storyUpdateSchema", () => {
 
   it("rejects body over the cap", () => {
     expect(() =>
-      storyUpdateSchema.parse({ bodyPt: "a".repeat(3001) }),
+      storyUpdateSchema.parse({ bodyPt: "a".repeat(20001) }),
     ).toThrow();
   });
 

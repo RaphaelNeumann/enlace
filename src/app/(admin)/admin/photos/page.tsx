@@ -7,7 +7,7 @@ import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 export default async function AdminPhotosPage() {
   const photos = await listPhotos();
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-8">
       <h1 className="text-2xl font-semibold">Galeria de fotos</h1>
 
       <section className="border rounded p-4 space-y-2">
@@ -16,9 +16,10 @@ export default async function AdminPhotosPage() {
           action={createPhotoAction}
           confirmTitle="Adicionar foto?"
           submitLabel="Adicionar"
+          resetOnSuccess
           className="space-y-2"
         >
-          <UploadField bucket="gallery" pathFieldName="storagePath" label="Imagem" />
+          <UploadField bucket="gallery" pathFieldName="storagePath" label="Imagem" required />
           <input name="captionPt" placeholder="Legenda (PT, opcional)" className="w-full rounded border px-3 py-2" />
           <input name="captionEn" placeholder="Caption (EN, opcional)" className="w-full rounded border px-3 py-2" />
           <label className="flex items-center gap-2 text-sm">
@@ -45,6 +46,7 @@ export default async function AdminPhotosPage() {
                 pathFieldName="storagePath"
                 defaultPath={p.storagePath}
                 label="Substituir imagem"
+                required
               />
               <input name="captionPt" defaultValue={p.captionPt ?? ""} className="w-full rounded border px-3 py-2 text-sm" />
               <input name="captionEn" defaultValue={p.captionEn ?? ""} className="w-full rounded border px-3 py-2 text-sm" />

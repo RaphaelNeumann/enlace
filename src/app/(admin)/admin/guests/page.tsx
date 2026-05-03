@@ -26,7 +26,7 @@ export default async function AdminGuestsPage({
     source: (sp.source as "admin" | "submitted" | undefined) ?? null,
   });
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Convidados</h1>
         <a href="/admin/rsvps" className="text-sm underline">

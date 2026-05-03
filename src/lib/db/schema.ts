@@ -235,6 +235,9 @@ export const gifts = pgTable("gifts", {
   photoStoragePath: text("photo_storage_path"),
   externalUrl: text("external_url"),
   suggestedAmountCents: integer("suggested_amount_cents"),
+  /** When false, the public dialog hides the "(✎ alterar)" link and the
+   *  guest can only pay the suggested value. */
+  allowAmountOverride: boolean("allow_amount_override").notNull().default(true),
   position: integer("position").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().default(sql`now()`),

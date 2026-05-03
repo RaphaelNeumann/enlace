@@ -19,7 +19,7 @@ export function PhotoGallerySection({ photos, locale = "pt", supabaseProjectUrl 
     <section className="py-20 px-6" aria-labelledby="gallery-heading">
       <h2
         id="gallery-heading"
-        className="text-4xl text-center mb-10"
+        className="text-7xl md:text-8xl text-center mb-10"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
       >
         {locale === "pt" ? "Galeria" : "Gallery"}

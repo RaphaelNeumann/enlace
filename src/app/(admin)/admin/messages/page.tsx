@@ -4,7 +4,7 @@ export default async function AdminMessagesPage() {
   const [messages, gifts] = await Promise.all([listGiftMessages(), listGifts()]);
   const giftById = new Map(gifts.map((g) => [g.id, g.titlePt]));
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-4">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-4">
       <h1 className="text-2xl font-semibold">Mensagens</h1>
       {messages.length === 0 ? <p className="text-sm opacity-70">Nenhuma mensagem ainda.</p> : null}
       <ul className="space-y-3">

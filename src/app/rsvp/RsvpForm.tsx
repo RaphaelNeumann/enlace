@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { searchAction, submitRsvpAction } from "./actions";
 import type { SubmitResult } from "@/lib/rsvp/submit";
+import { CaptchaDialog } from "@/components/admin/CaptchaDialog";
 
 interface Match {
   id: string;
@@ -11,7 +12,13 @@ interface Match {
   plusOnesAllowed: number;
 }
 
-export function RsvpForm({ mode }: { mode: "closed" | "open" }) {
+export function RsvpForm({
+  mode,
+  turnstileSiteKey,
+}: {
+  mode: "closed" | "open";
+  turnstileSiteKey: string | null;
+}) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
@@ -22,6 +29,11 @@ export function RsvpForm({ mode }: { mode: "closed" | "open" }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [captchaOpen, setCaptchaOpen] = useState(false);
+  // Snapshot of the form values waiting for the captcha to complete; we
+  // can't keep the FormData object across the dialog because the form
+  // node remains mounted but the entries are read once on submit.
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
 
   const allowed = mode === "closed" ? matched?.plusOnesAllowed ?? 0 : 0;
 
@@ -57,6 +69,18 @@ export function RsvpForm({ mode }: { mode: "closed" | "open" }) {
     const fd = new FormData(form);
     plusOnes.forEach((v, i) => fd.set(`plusOneName-${i}`, v));
     fd.set("attending", attending ?? "");
+    if (turnstileSiteKey) {
+      // Defer the captcha to a dedicated dialog so Turnstile's SDK is
+      // only loaded when the guest is actively trying to submit.
+      setPendingFormData(fd);
+      setCaptchaOpen(true);
+      return;
+    }
+    submitWithToken(fd, null);
+  }
+
+  function submitWithToken(fd: FormData, token: string | null) {
+    if (token) fd.set("turnstileToken", token);
     startTransition(async () => {
       const r = await submitRsvpAction(fd);
       setResult(r as SubmitResult);
@@ -72,6 +96,8 @@ export function RsvpForm({ mode }: { mode: "closed" | "open" }) {
           setError("Já registramos essa resposta.");
         else if (r.error.kind === "rateLimited")
           setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+        else if (r.error.kind === "captchaFailed")
+          setError("Verificação anti-spam falhou. Tente novamente.");
       }
     });
   }
@@ -223,6 +249,21 @@ export function RsvpForm({ mode }: { mode: "closed" | "open" }) {
       >
         {pending ? "Enviando..." : "Confirmar"}
       </button>
+      {captchaOpen && turnstileSiteKey && pendingFormData ? (
+        <CaptchaDialog
+          siteKey={turnstileSiteKey}
+          onCancel={() => {
+            setCaptchaOpen(false);
+            setPendingFormData(null);
+          }}
+          onToken={(token) => {
+            setCaptchaOpen(false);
+            const fd = pendingFormData;
+            setPendingFormData(null);
+            if (fd) submitWithToken(fd, token);
+          }}
+        />
+      ) : null}
     </form>
   );
 }

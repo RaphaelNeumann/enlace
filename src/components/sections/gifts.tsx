@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { Gift } from "@/lib/gifts/db";
 import type { Locale } from "@/lib/hero/format-date";
 import { publicUrl } from "@/lib/storage/supabase";
+import { MercadoPagoWalletButton } from "@/components/admin/MercadoPagoWalletButton";
+import { CaptchaDialog } from "@/components/admin/CaptchaDialog";
 
 export interface GiftsSectionProps {
   gifts: Gift[];
@@ -12,12 +14,21 @@ export interface GiftsSectionProps {
   pixKey: string | null;
   pixRecipient: string | null;
   hasMercadoPago: boolean;
+  mercadoPagoPublicKey: string | null;
+  turnstileSiteKey: string | null;
   supabaseProjectUrl?: string;
-  createMpCheckoutAction: (giftId: string) => Promise<{ ok: true; url: string } | { ok: false; error: string }>;
+  createMpCheckoutAction: (
+    giftId: string,
+    amountCents?: number | null,
+  ) => Promise<
+    | { ok: true; preferenceId: string; url: string }
+    | { ok: false; error: string }
+  >;
   submitMessageAction: (
     giftId: string | null,
     senderName: string,
     message: string,
+    turnstileToken?: string | null,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   recomputePixAction: (
     giftId: string,
@@ -29,6 +40,25 @@ function pickText(pt: string, en: string | null, locale: Locale): string {
   return locale === "en" && en ? en : pt;
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="11"
+      height="11"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  );
+}
+
 function formatBrl(cents: number | null): string {
   if (cents == null) return "";
   return (cents / 100).toLocaleString("pt-BR", {
@@ -38,7 +68,7 @@ function formatBrl(cents: number | null): string {
 }
 
 export function GiftsSection(props: GiftsSectionProps) {
-  const { gifts, locale = "pt", pixBrCodeMap, pixKey, hasMercadoPago, supabaseProjectUrl, createMpCheckoutAction, submitMessageAction, recomputePixAction } = props;
+  const { gifts, locale = "pt", pixBrCodeMap, pixKey, hasMercadoPago, mercadoPagoPublicKey, turnstileSiteKey, supabaseProjectUrl, createMpCheckoutAction, submitMessageAction, recomputePixAction } = props;
   const visible = gifts.filter((g) => g.isVisible);
   const [openId, setOpenId] = useState<string | null>(null);
   if (visible.length === 0) return null;
@@ -54,7 +84,7 @@ export function GiftsSection(props: GiftsSectionProps) {
     <section className="py-20 px-6" aria-labelledby="gifts-heading">
       <h2
         id="gifts-heading"
-        className="text-4xl text-center mb-10"
+        className="text-7xl md:text-8xl text-center mb-10"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
       >
         {locale === "pt" ? "Lista de presentes" : "Gift catalog"}
@@ -95,6 +125,8 @@ export function GiftsSection(props: GiftsSectionProps) {
           pixBrCode={pixBrCodeMap[open.id]}
           pixKey={pixKey}
           hasMercadoPago={hasMercadoPago}
+          mercadoPagoPublicKey={mercadoPagoPublicKey}
+          turnstileSiteKey={turnstileSiteKey}
           onClose={() => setOpenId(null)}
           createMpCheckoutAction={createMpCheckoutAction}
           submitMessageAction={submitMessageAction}
@@ -111,13 +143,15 @@ interface GiftDialogProps {
   pixBrCode: { brCode: string; svg: string } | null | undefined;
   pixKey: string | null;
   hasMercadoPago: boolean;
+  mercadoPagoPublicKey: string | null;
+  turnstileSiteKey: string | null;
   onClose: () => void;
   createMpCheckoutAction: GiftsSectionProps["createMpCheckoutAction"];
   submitMessageAction: GiftsSectionProps["submitMessageAction"];
   recomputePixAction: GiftsSectionProps["recomputePixAction"];
 }
 
-function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, createMpCheckoutAction, submitMessageAction, recomputePixAction }: GiftDialogProps) {
+function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, mercadoPagoPublicKey, turnstileSiteKey, onClose, createMpCheckoutAction, submitMessageAction, recomputePixAction }: GiftDialogProps) {
   const [pending, startTransition] = useTransition();
   const [mpError, setMpError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
@@ -128,6 +162,13 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
     gift.suggestedAmountCents ?? null,
   );
   const [editOpen, setEditOpen] = useState(false);
+  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
+  const [captchaOpen, setCaptchaOpen] = useState(false);
+  // The guest fills the form, clicks send → we stash the values and open
+  // the captcha dialog. After the captcha returns a token we replay the
+  // submission. State is reset on success/failure so each new attempt
+  // re-prompts the captcha.
+  const [pendingMessage, setPendingMessage] = useState<{ senderName: string; message: string } | null>(null);
 
   function copyPixCode() {
     if (!currentPix) return;
@@ -140,14 +181,27 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
     );
   }
 
-  function openMp() {
+  // Whenever the (re-)computed amount changes and Mercado Pago is configured,
+  // create/refresh a checkout preference so the Wallet Brick renders with
+  // the same value the guest sees in the dialog (PIX edits flow into MP).
+  useEffect(() => {
+    if (!hasMercadoPago || !mercadoPagoPublicKey || currentAmountCents == null) {
+      setMpPreferenceId(null);
+      return;
+    }
+    let cancelled = false;
     setMpError(null);
-    startTransition(async () => {
-      const r = await createMpCheckoutAction(gift.id);
-      if (r.ok) window.open(r.url, "_blank", "noopener,noreferrer");
+    setMpPreferenceId(null);
+    (async () => {
+      const r = await createMpCheckoutAction(gift.id, currentAmountCents);
+      if (cancelled) return;
+      if (r.ok) setMpPreferenceId(r.preferenceId);
       else setMpError(r.error);
-    });
-  }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasMercadoPago, mercadoPagoPublicKey, currentAmountCents, gift.id, createMpCheckoutAction]);
 
   function sendMessage(form: HTMLFormElement) {
     const fd = new FormData(form);
@@ -158,11 +212,29 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
       setMsgError("Preencha nome e mensagem.");
       return;
     }
+    setMsgState("idle");
+    setMsgError(null);
+    if (turnstileSiteKey) {
+      // Defer the captcha to a dedicated dialog — the SDK script is only
+      // fetched when the guest is actually about to send a message.
+      setPendingMessage({ senderName, message });
+      setCaptchaOpen(true);
+      return;
+    }
+    submitMessage(senderName, message, null, form);
+  }
+
+  function submitMessage(
+    senderName: string,
+    message: string,
+    token: string | null,
+    form: HTMLFormElement | null,
+  ) {
     startTransition(async () => {
-      const r = await submitMessageAction(gift.id, senderName, message);
+      const r = await submitMessageAction(gift.id, senderName, message, token);
       if (r.ok) {
         setMsgState("sent");
-        form.reset();
+        form?.reset();
       } else {
         setMsgState("error");
         setMsgError(r.error);
@@ -182,7 +254,7 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-w-md w-full rounded p-6 max-h-[90vh] overflow-y-auto space-y-4"
+        className="max-w-md w-full rounded p-6 max-h-[90vh] overflow-y-auto space-y-2"
         style={{
           backgroundColor: "var(--color-card)",
           color: "var(--color-card-foreground)",
@@ -192,7 +264,7 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
         }}
       >
         <button type="button" onClick={onClose} aria-label="Fechar" className="float-right text-sm opacity-70">✕</button>
-        <h3 className="text-2xl" style={{ color: "var(--color-primary)" }}>
+        <h3 className="text-2xl text-center" style={{ color: "var(--color-primary)" }}>
           {pickText(gift.titlePt, gift.titleEn, locale)}
         </h3>
         {gift.descriptionPt ? (
@@ -201,74 +273,80 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
           </p>
         ) : null}
         {currentPix && pixKey ? (
-          <div className="space-y-2 border-t pt-4">
-            <p className="text-xs uppercase tracking-widest opacity-70">PIX</p>
-            <div
-              className="mx-auto w-48 h-48 flex items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: currentPix.svg }}
-            />
-            <p className="text-xs opacity-70 break-all">Chave: {pixKey}</p>
-            {showAmount ? (
-              <p className="text-sm">
-                Valor sugerido: {amountLabel}{" "}
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(true)}
-                  className="underline underline-offset-2"
-                >
-                  alterar
-                </button>
-              </p>
-            ) : (
-              <p className="text-sm">
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(true)}
-                  className="underline underline-offset-2"
-                >
-                  Definir um valor
-                </button>
-              </p>
-            )}
-            <button type="button" onClick={copyPixCode} className="rounded border px-3 py-1 text-sm">
-              {copyState === "copied" ? "Copiado!" : "Copiar código PIX"}
-            </button>
-          </div>
+          <>
+            <div className="border-t pt-2 text-center">
+              {showAmount ? (
+                <>
+                  <p className="text-sm">
+                    Valor sugerido: <strong className="font-semibold">{amountLabel}</strong>
+                  </p>
+                  {gift.allowAmountOverride ? (
+                    <p>
+                      <button
+                        type="button"
+                        onClick={() => setEditOpen(true)}
+                        className="text-xs inline-flex items-center gap-1"
+                      >
+                        (<PencilIcon />
+                        alterar)
+                      </button>
+                    </p>
+                  ) : null}
+                </>
+              ) : gift.allowAmountOverride ? (
+                <p>
+                  <button
+                    type="button"
+                    onClick={() => setEditOpen(true)}
+                    className="text-xs inline-flex items-center gap-1"
+                  >
+                    (<PencilIcon />
+                    definir um valor)
+                  </button>
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2 text-center">
+              <p className="text-base font-semibold uppercase tracking-widest opacity-80">PIX</p>
+              <button
+                type="button"
+                onClick={copyPixCode}
+                className="mx-auto block rounded border px-3 py-1 text-sm"
+              >
+                {copyState === "copied" ? "Copiado!" : "Copiar código PIX"}
+              </button>
+              <div
+                className="mx-auto w-48 h-48 flex items-center justify-center"
+                dangerouslySetInnerHTML={{ __html: currentPix.svg }}
+              />
+              <p className="text-xs opacity-70 break-all">Chave: {pixKey}</p>
+            </div>
+          </>
         ) : null}
-        {hasMercadoPago && showAmount ? (
-          <div className="space-y-2 border-t pt-4">
-            <p className="text-xs uppercase tracking-widest opacity-70">Cartão</p>
-            <p className="text-sm">Valor: {amountLabel}</p>
-            <button
-              type="button"
-              onClick={openMp}
-              disabled={pending}
-              className="rounded border px-3 py-2 text-sm"
-              style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
-            >
-              {pending ? "Abrindo..." : "Pagar com cartão"}
-            </button>
+        {hasMercadoPago && mercadoPagoPublicKey && showAmount ? (
+          <div className="space-y-2 text-center">
+            <p className="text-base font-semibold uppercase tracking-widest opacity-80">
+              Cartão
+            </p>
+            {mpPreferenceId ? (
+              <MercadoPagoWalletButton
+                publicKey={mercadoPagoPublicKey}
+                preferenceId={mpPreferenceId}
+                resetKey={`${currentAmountCents}`}
+                onError={setMpError}
+              />
+            ) : !mpError ? (
+              <p className="text-xs opacity-60">Carregando Mercado Pago...</p>
+            ) : null}
             {mpError ? <p className="text-xs" style={{ color: "var(--color-accent)" }}>{mpError}</p> : null}
           </div>
-        ) : null}
-        {gift.externalUrl ? (
-          <p className="border-t pt-4">
-            <a
-              href={gift.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm underline"
-            >
-              Abrir loja externa
-            </a>
-          </p>
         ) : null}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage(e.currentTarget);
           }}
-          className="space-y-2 border-t pt-4"
+          className="space-y-2 border-t pt-2 mt-1"
         >
           <p className="text-xs uppercase tracking-widest opacity-70">Mensagem para os noivos</p>
           <input
@@ -300,6 +378,21 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
           ) : null}
         </form>
       </div>
+      {captchaOpen && turnstileSiteKey && pendingMessage ? (
+        <CaptchaDialog
+          siteKey={turnstileSiteKey}
+          onCancel={() => {
+            setCaptchaOpen(false);
+            setPendingMessage(null);
+          }}
+          onToken={(token) => {
+            setCaptchaOpen(false);
+            const data = pendingMessage;
+            setPendingMessage(null);
+            if (data) submitMessage(data.senderName, data.message, token, null);
+          }}
+        />
+      ) : null}
       {editOpen ? (
         <EditAmountDialog
           initialCents={currentAmountCents ?? gift.suggestedAmountCents ?? 10000}
@@ -343,7 +436,14 @@ function EditAmountDialog({ initialCents, pending, onCancel, onConfirm }: EditAm
     <div
       role="dialog"
       aria-modal="true"
-      onClick={onCancel}
+      // Stop propagation BEFORE running onCancel so the click never
+      // reaches the parent GiftDialog's backdrop (which would close the
+      // whole thing). Without this, any click on the dark area here
+      // closes both dialogs.
+      onClick={(e) => {
+        e.stopPropagation();
+        onCancel();
+      }}
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
     >

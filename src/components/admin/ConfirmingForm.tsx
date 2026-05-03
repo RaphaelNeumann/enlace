@@ -13,6 +13,11 @@ export interface ConfirmingFormProps {
   submitLabel?: string;
   /** Confirm button label inside the modal (defaults to "Confirmar"). */
   confirmLabel?: string;
+  /** When true, clear the form on a successful submission so the admin
+   *  can add another item in sequence (e.g. uploading photos one after
+   *  another). Children are remounted via key bump, which also resets
+   *  Client Components like `UploadField` that hold local state. */
+  resetOnSuccess?: boolean;
   className?: string;
   children: React.ReactNode;
 }
@@ -23,12 +28,14 @@ export function ConfirmingForm({
   confirmDescription,
   submitLabel = "Salvar",
   confirmLabel = "Confirmar",
+  resetOnSuccess = false,
   className,
   children,
 }: ConfirmingFormProps) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [resetKey, setResetKey] = useState(0);
 
   function onSubmitClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -43,10 +50,19 @@ export function ConfirmingForm({
     if (!formRef.current) return;
     const formData = new FormData(formRef.current);
     startTransition(async () => {
+      let success = false;
       try {
         await action(formData);
+        success = true;
       } finally {
         setOpen(false);
+      }
+      if (success && resetOnSuccess) {
+        formRef.current?.reset();
+        // Bump the key on the children wrapper so Client Components
+        // (e.g. `UploadField`) lose their local state and re-render
+        // from their `defaultPath` (typically empty for "add new").
+        setResetKey((k) => k + 1);
       }
     });
   }
@@ -54,7 +70,12 @@ export function ConfirmingForm({
   return (
     <>
       <form ref={formRef} className={className} onSubmit={(e) => e.preventDefault()}>
-        {children}
+        {/* `display: contents` keeps the form's `space-y-*` rhythm
+            applying to inputs directly, while still letting us swap the
+            wrapper key to remount stateful Client Components on reset. */}
+        <div key={resetKey} className="contents">
+          {children}
+        </div>
         <button
           type="submit"
           onClick={onSubmitClick}

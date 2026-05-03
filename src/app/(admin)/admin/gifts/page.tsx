@@ -7,7 +7,7 @@ import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 export default async function AdminGiftsPage() {
   const items = await listGifts();
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-8">
       <h1 className="text-2xl font-semibold">Lista de presentes</h1>
 
       <section className="border rounded p-4 space-y-2">
@@ -31,6 +31,9 @@ export default async function AdminGiftsPage() {
             placeholder="Valor sugerido (em centavos)"
             className="w-full rounded border px-3 py-2"
           />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="allowAmountOverride" defaultChecked /> Permitir alterar valor sugerido
+          </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="isVisible" defaultChecked /> Visível
           </label>
@@ -68,6 +71,9 @@ export default async function AdminGiftsPage() {
                 defaultValue={g.suggestedAmountCents ?? ""}
                 className="w-full rounded border px-3 py-2"
               />
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="allowAmountOverride" defaultChecked={g.allowAmountOverride} /> Permitir alterar valor sugerido
+              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="isVisible" defaultChecked={g.isVisible} /> Visível
               </label>

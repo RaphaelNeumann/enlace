@@ -19,6 +19,7 @@ export const giftCreateSchema = z.object({
   photoStoragePath: z.string().trim().max(500).optional().nullable(),
   externalUrl: httpsUrlOptional,
   suggestedAmountCents: z.number().int().nonnegative().max(100_000_000).optional().nullable(),
+  allowAmountOverride: z.boolean().default(true),
   isVisible: z.boolean().default(true),
 });
 

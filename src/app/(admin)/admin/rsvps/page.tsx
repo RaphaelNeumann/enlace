@@ -12,7 +12,7 @@ export default async function AdminRsvpsPage({
   });
   const totalPlusOnes = rows.reduce((acc, r) => acc + r.plusOnes.length, 0);
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Confirmados</h1>
         <a href="/admin/guests" className="text-sm underline">

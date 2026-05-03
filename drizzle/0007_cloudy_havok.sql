@@ -1,0 +1,1 @@
+ALTER TABLE "gifts" ADD COLUMN "allow_amount_override" boolean DEFAULT true NOT NULL;

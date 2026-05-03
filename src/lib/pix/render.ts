@@ -20,7 +20,11 @@ export function renderPix(input: BrCodeInput): PixSection {
     width: 256,
     height: 256,
     color: "#000000",
-    background: "#ffffff",
+    // Cream surface that matches `--color-card` (#FBF8F0) so the QR
+    // blends into the gift dialog instead of breaking the layout with a
+    // pure-white block. Bank apps still recognise it because contrast
+    // with #000 modules is well above the 50% threshold the spec needs.
+    background: "#FBF8F0",
     ecl: "M",
     join: true,
     container: "svg-viewbox",

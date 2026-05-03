@@ -7,11 +7,13 @@ import { RsvpForm } from "./RsvpForm";
 
 export default async function RsvpBarePage() {
   const expected = getRsvpAccessToken();
+  const turnstileSiteKey =
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || null;
   if (!expected) {
     // Env unset — public form available at /rsvp.
     return (
       <main className="flex-1 px-6 py-12">
-        <RsvpForm mode={wedding.rsvp.mode} />
+        <RsvpForm mode={wedding.rsvp.mode} turnstileSiteKey={turnstileSiteKey} />
       </main>
     );
   }
@@ -25,7 +27,7 @@ export default async function RsvpBarePage() {
       <p className="text-center text-xs uppercase tracking-widest opacity-70 mb-6">
         Modo prévia · admin
       </p>
-      <RsvpForm mode={wedding.rsvp.mode} />
+      <RsvpForm mode={wedding.rsvp.mode} turnstileSiteKey={turnstileSiteKey} />
     </main>
   );
 }

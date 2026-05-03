@@ -35,6 +35,7 @@ export async function createGiftAction(formData: FormData): Promise<void> {
   const session = await auth();
   const obj = fdToObj(formData);
   obj.isVisible = obj.isVisible === true;
+  obj.allowAmountOverride = obj.allowAmountOverride === true;
   await adminCreateGift(obj, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/gifts");
@@ -44,6 +45,7 @@ export async function updateGiftAction(id: string, formData: FormData): Promise<
   const session = await auth();
   const obj = fdToObj(formData);
   obj.isVisible = obj.isVisible === true;
+  obj.allowAmountOverride = obj.allowAmountOverride === true;
   await adminUpdateGift(id, obj, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/gifts");

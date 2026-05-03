@@ -65,6 +65,10 @@ export function createSupabaseStorage(options: SupabaseStorageOptions): Supabase
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
+          // The new Supabase API key model (sb_secret_…) requires both
+          // headers; the JS SDK sends them too. Older JWT service_role
+          // keys also accept this combo.
+          apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
           "Content-Type": "application/json",
         },
@@ -81,9 +85,18 @@ export function createSupabaseStorage(options: SupabaseStorageOptions): Supabase
       }
       const obj = json as { url?: string; token?: string };
       const relativeUrl = obj.url ?? "";
-      const signedUrl = relativeUrl.startsWith("http")
-        ? relativeUrl
-        : `${projectUrl}${relativeUrl}`;
+      // The API returns the URL relative to /storage/v1 (e.g.
+      // "/object/upload/sign/<bucket>/<path>?token=…"). Prepend the
+      // project origin AND the missing /storage/v1 segment so the PUT
+      // hits the actual storage endpoint.
+      let signedUrl: string;
+      if (relativeUrl.startsWith("http")) {
+        signedUrl = relativeUrl;
+      } else if (relativeUrl.startsWith("/storage/v1")) {
+        signedUrl = `${projectUrl}${relativeUrl}`;
+      } else {
+        signedUrl = `${projectUrl}/storage/v1${relativeUrl}`;
+      }
       return { signedUrl, token: obj.token ?? "" };
     },
     async remove(input) {
@@ -95,6 +108,7 @@ export function createSupabaseStorage(options: SupabaseStorageOptions): Supabase
       const res = await fetch(endpoint, {
         method: "DELETE",
         headers: {
+          apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
           "Content-Type": "application/json",
         },

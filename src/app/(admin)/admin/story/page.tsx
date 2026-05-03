@@ -5,7 +5,7 @@ import { updateStoryAction } from "./actions";
 export default async function AdminStoryPage() {
   const story = await getStoryContent();
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <main className="mx-auto max-w-5xl my-8 px-8 py-10 rounded-md bg-white shadow-sm space-y-6">
       <h1 className="text-2xl font-semibold">Nossa história</h1>
       <ConfirmingForm
         action={updateStoryAction}

@@ -6,27 +6,42 @@ import { createMercadoPagoClient } from "@/lib/mercadopago/client";
 import { createGiftMessageInDb } from "@/lib/gifts/db";
 import { createRateLimiter } from "@/lib/rate-limit/rate-limit";
 import { renderPix } from "@/lib/pix/render";
+import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 
 const messageLimiter = createRateLimiter({ max: 10, windowMs: 60 * 60 * 1000 });
 
 export async function createGiftCheckoutAction(
   giftId: string,
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  amountCents?: number | null,
+): Promise<
+  | { ok: true; preferenceId: string; url: string }
+  | { ok: false; error: string }
+> {
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
   if (!token) return { ok: false, error: "Pagamento por cartão não configurado." };
   const gift = await getGift(giftId);
   if (!gift || !gift.isVisible) return { ok: false, error: "Presente não disponível." };
-  if (gift.suggestedAmountCents == null || gift.suggestedAmountCents <= 0) {
+  // Prefer the client-supplied amount (the guest may have edited the
+  // suggested value via the PIX dialog); fall back to the cadastro value.
+  let chargeCents: number;
+  if (amountCents != null && gift.allowAmountOverride) {
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      return { ok: false, error: "Valor inválido." };
+    }
+    chargeCents = Math.round(amountCents);
+  } else if (gift.suggestedAmountCents != null && gift.suggestedAmountCents > 0) {
+    chargeCents = gift.suggestedAmountCents;
+  } else {
     return { ok: false, error: "Este presente não tem valor sugerido para cartão." };
   }
   try {
     const client = createMercadoPagoClient({ accessToken: token });
     const result = await client.createPreference({
       title: gift.titlePt,
-      amountCents: gift.suggestedAmountCents,
+      amountCents: chargeCents,
       externalReference: gift.id,
     });
-    return { ok: true, url: result.initPoint };
+    return { ok: true, preferenceId: result.id, url: result.initPoint };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro inesperado";
     return { ok: false, error: message };
@@ -52,10 +67,19 @@ export async function recomputePixBrCodeAction(
   if (!gift || !gift.isVisible) return { ok: false, error: "Presente não disponível." };
   let amount: number | undefined;
   if (amountCents != null) {
-    if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      return { ok: false, error: "Valor inválido." };
+    if (!gift.allowAmountOverride) {
+      // Server-side guard: even if a client sends an override, fall back
+      // to the suggested value when the gift doesn't allow editing.
+      amount =
+        gift.suggestedAmountCents != null && gift.suggestedAmountCents > 0
+          ? gift.suggestedAmountCents
+          : undefined;
+    } else {
+      if (!Number.isFinite(amountCents) || amountCents <= 0) {
+        return { ok: false, error: "Valor inválido." };
+      }
+      amount = Math.round(amountCents);
     }
-    amount = Math.round(amountCents);
   }
   const recipientName = process.env.PIX_RECIPIENT_NAME?.trim() ?? "";
   const city = process.env.PIX_CITY?.trim() || "BRASIL";
@@ -77,6 +101,7 @@ export async function submitGiftMessageAction(
   giftId: string | null,
   senderName: string,
   message: string,
+  turnstileToken?: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const headerList = await headers();
   const ip =
@@ -85,6 +110,14 @@ export async function submitGiftMessageAction(
     "unknown";
   const limit = messageLimiter.check(ip);
   if (!limit.ok) return { ok: false, error: "Muitas tentativas. Tente novamente em alguns minutos." };
+  // When Turnstile is configured (secret + sitekey), require + verify the
+  // token. `verifyTurnstileToken` short-circuits to ok when no secret is
+  // present so deployments without captcha keep working.
+  const captchaRequired = Boolean(process.env.TURNSTILE_SECRET_KEY?.trim());
+  if (captchaRequired) {
+    const v = await verifyTurnstileToken(turnstileToken, ip === "unknown" ? undefined : ip);
+    if (!v.ok) return { ok: false, error: "Verificação anti-spam falhou. Tente novamente." };
+  }
   try {
     await createGiftMessageInDb({ giftId, senderName, message });
     return { ok: true };
