@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { adminUpdateSiteSettings } from "@/lib/site-settings/admin-update";
 
@@ -10,6 +11,7 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
   await adminUpdateSiteSettings(input, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/site");
+  redirect("/admin");
 }
 
 // Fields that the schema treats as nullable; an empty string in the form

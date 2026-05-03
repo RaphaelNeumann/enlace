@@ -1,4 +1,5 @@
 import { getSiteSettings } from "@/lib/site-settings/get";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
 import { updateSiteSettingsAction } from "./actions";
 
 const VISIBILITY_FLAGS = [
@@ -33,7 +34,12 @@ export default async function AdminSitePage() {
         </p>
       </header>
 
-      <form action={updateSiteSettingsAction} className="space-y-8">
+      <ConfirmingForm
+        action={updateSiteSettingsAction}
+        confirmTitle="Salvar configurações?"
+        confirmDescription="As alterações serão aplicadas imediatamente no site público."
+        className="space-y-8"
+      >
         <section className="space-y-3">
           <h2 className="text-lg font-medium">Casal</h2>
           <div className="grid grid-cols-2 gap-3">
@@ -122,13 +128,7 @@ export default async function AdminSitePage() {
           </div>
         </section>
 
-        <button
-          type="submit"
-          className="rounded border border-current px-4 py-2 text-sm tracking-wide uppercase"
-        >
-          Salvar
-        </button>
-      </form>
+      </ConfirmingForm>
     </main>
   );
 }
