@@ -83,16 +83,16 @@ export function Hero({
               <img
                 src={monogramImageUrl}
                 alt={monogramAltLabel}
-                width={120}
-                height={120}
-                className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
+                width={88}
+                height={88}
+                className="mx-auto h-auto max-h-24 w-auto max-w-[140px] object-contain"
               />
             ) : (
               <Monogram
                 partner1ShortName={settings.partner1ShortName}
                 partner2ShortName={settings.partner2ShortName}
                 override={initials}
-                size={120}
+                size={88}
                 className="mx-auto"
               />
             )}
@@ -113,12 +113,12 @@ export function Hero({
             )}
           </h1>
           {subtitle ? (
-            <p className="text-sm tracking-[0.18em]">{subtitle}</p>
+            <p className="text-lg md:text-xl tracking-[0.18em]">{subtitle}</p>
           ) : null}
           {countdown && countdown.state !== "hidden" ? (
             <p
               aria-live="polite"
-              className="text-sm tracking-[0.16em] uppercase"
+              className="text-lg md:text-xl tracking-[0.16em] uppercase"
             >
               {countdown.state === "today"
                 ? locale === "pt"
