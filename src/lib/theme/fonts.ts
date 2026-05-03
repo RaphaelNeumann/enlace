@@ -1,8 +1,14 @@
-import { Allura, Cormorant_Garamond } from "next/font/google";
+import { Pinyon_Script, Cormorant_Garamond } from "next/font/google";
 
-export const fontAllura = Allura({
+/**
+ * Pinyon Script is the classic copperplate-style wedding-invitation
+ * calligraphy. Long descenders, generous flourishes on capitals, drawn
+ * strokes — much more ornate than the previous Allura. Single weight
+ * (400) on Google Fonts.
+ */
+export const fontDisplay = Pinyon_Script({
   weight: "400",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
 });
@@ -14,4 +20,4 @@ export const fontCormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-export const allFontVariables = [fontAllura.variable, fontCormorant.variable].join(" ");
+export const allFontVariables = [fontDisplay.variable, fontCormorant.variable].join(" ");

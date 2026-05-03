@@ -74,16 +74,16 @@ Additional presets (`modern-minimal`, `monochrome`, `rustic`, etc.) can ship in 
     lg: "0.75rem",   // 12px — cards
     full: "9999px",  // pills
   },
-  fontPair: "allura-cormorant",
+  fontPair: "pinyon-cormorant",
 }
 ```
 
-The `allura-cormorant` font pair (registered in `src/lib/theme/fonts.ts`) loads:
-- **Display / script**: `Allura` (Google Fonts) → exposed as `--font-display`.
+The `pinyon-cormorant` font pair (registered in `src/lib/theme/fonts.ts`) loads:
+- **Display / script**: `Pinyon Script` (Google Fonts) → exposed as `--font-display`. Classic copperplate-style wedding-invitation calligraphy with generous flourishes on capitals and long descenders.
 - **Body / serif**: `Cormorant Garamond` (Google Fonts), weights 400/500/600 with `latin` and `latin-ext` subsets → exposed as `--font-body`.
 - The body font's **small-caps** variant drives the all-caps tracked headings (`DOMINGO, 20 DE OUTUBRO DE 2026 ÀS 16H00`, button labels, location lines). Implemented via the CSS `font-variant: small-caps` plus `letter-spacing: 0.08em` rather than a separate font.
 
-No third script font is needed — `Allura` covers all calligraphic uses (couple names, section headings).
+No third script font is needed — `Pinyon Script` covers all calligraphic uses (couple names, section headings).
 
 ## Data model
 
