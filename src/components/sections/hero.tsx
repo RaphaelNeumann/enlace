@@ -61,7 +61,7 @@ export function Hero({
         padding, the paper texture from <html> showing through.
       */}
       <div
-        className="mx-auto max-w-md text-center px-8 py-12 space-y-8"
+        className="mx-auto max-w-2xl text-center px-8 py-12 space-y-8"
         style={{
           border:
             "1px solid color-mix(in srgb, var(--color-primary) 55%, transparent)",
