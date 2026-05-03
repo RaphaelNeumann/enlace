@@ -96,13 +96,13 @@ export function Hero({
         </div>
         <h1
           id="hero-heading"
-          className="text-6xl md:text-7xl leading-tight"
+          className="text-8xl md:text-9xl leading-tight"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {hasBothNames ? (
             <>
               <span className="block">{firstLine}</span>
-              <span className="block text-5xl md:text-6xl">&amp;</span>
+              <span className="block text-6xl md:text-7xl">&amp;</span>
               <span className="block">{secondLine}</span>
             </>
           ) : (
