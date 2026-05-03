@@ -37,11 +37,43 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
 }
 
 describe("Hero", () => {
-  it("renders couple names from siteSettings respecting partnersOrder", () => {
+  it("renders couple names as three stacked lines respecting partnersOrder", () => {
     render(<Hero settings={makeSettings({ partnersOrder: "p2-p1" })} now={new Date("2099-01-01T00:00:00Z")} />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Daniel & Fernanda",
+    const h1 = screen.getByRole("heading", { level: 1 });
+    const lines = h1.querySelectorAll("span");
+    expect(lines.length).toBe(3);
+    expect(lines[0].textContent).toBe("Daniel");
+    expect(lines[1].textContent).toBe("&");
+    expect(lines[2].textContent).toBe("Fernanda");
+  });
+
+  it("renders names in p1-p2 order when partnersOrder is p1-p2", () => {
+    render(<Hero settings={makeSettings({ partnersOrder: "p1-p2" })} now={new Date("2099-01-01T00:00:00Z")} />);
+    const lines = screen.getByRole("heading", { level: 1 }).querySelectorAll("span");
+    expect(lines[0].textContent).toBe("Fernanda");
+    expect(lines[2].textContent).toBe("Daniel");
+  });
+
+  it("falls back to the only filled name (no & line) when one is missing", () => {
+    render(
+      <Hero
+        settings={makeSettings({ partner1Name: "Fernanda", partner2Name: "" })}
+        now={new Date("2099-01-01T00:00:00Z")}
+      />,
     );
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.querySelectorAll("span").length).toBe(0);
+    expect(h1.textContent).toBe("Fernanda");
+  });
+
+  it("falls back to em-dash when neither name is set", () => {
+    render(
+      <Hero
+        settings={makeSettings({ partner1Name: "", partner2Name: "" })}
+        now={new Date("2099-01-01T00:00:00Z")}
+      />,
+    );
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("—");
   });
 
   it("renders the localized subtitle when wedding date is set", () => {

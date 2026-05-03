@@ -1,7 +1,6 @@
 import { Monogram, deriveInitials } from "@/components/monogram";
 import { formatHeroSubtitle, type Locale } from "@/lib/hero/format-date";
 import { computeCountdown } from "@/lib/hero/countdown";
-import { formatCoupleNames } from "@/components/site-footer";
 import type { SiteSettings } from "@/lib/site-settings/get";
 
 export interface HeroProps {
@@ -14,11 +13,18 @@ export function Hero({ settings, locale = "pt", now = new Date() }: HeroProps) {
   const initials =
     settings.monogramInitialsOverride ??
     deriveInitials(settings.partner1ShortName, settings.partner2ShortName);
-  const coupleNames = formatCoupleNames({
-    partner1Name: settings.partner1Name,
-    partner2Name: settings.partner2Name,
-    partnersOrder: settings.partnersOrder,
-  });
+  const firstLine = (
+    settings.partnersOrder === "p1-p2"
+      ? settings.partner1Name
+      : settings.partner2Name
+  ).trim();
+  const secondLine = (
+    settings.partnersOrder === "p1-p2"
+      ? settings.partner2Name
+      : settings.partner1Name
+  ).trim();
+  const hasBothNames = firstLine.length > 0 && secondLine.length > 0;
+  const fallback = firstLine || secondLine || "—";
   const subtitle = formatHeroSubtitle(
     settings.weddingDate,
     settings.weddingTimeZone,
@@ -38,10 +44,18 @@ export function Hero({ settings, locale = "pt", now = new Date() }: HeroProps) {
       </div>
       <h1
         id="hero-heading"
-        className="text-6xl md:text-7xl"
+        className="text-6xl md:text-7xl leading-tight"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-foreground)" }}
       >
-        {coupleNames || "—"}
+        {hasBothNames ? (
+          <>
+            <span className="block">{firstLine}</span>
+            <span className="block text-5xl md:text-6xl">&amp;</span>
+            <span className="block">{secondLine}</span>
+          </>
+        ) : (
+          fallback
+        )}
       </h1>
       {subtitle ? (
         <p
