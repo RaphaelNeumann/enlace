@@ -8,14 +8,15 @@ import {
   adminDeletePhoto,
 } from "@/lib/photos/db";
 
+const NULLABLE = new Set(["captionPt", "captionEn"]);
+
 function fdToObj(formData: FormData): Record<string, unknown> {
   const obj: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
-    if (typeof value === "string") {
-      if (value === "on") obj[key] = true;
-      else if (value === "") obj[key] = null;
-      else obj[key] = value;
-    }
+    if (typeof value !== "string") continue;
+    if (value === "on") obj[key] = true;
+    else if (value === "" && NULLABLE.has(key)) obj[key] = null;
+    else obj[key] = value;
   }
   return obj;
 }

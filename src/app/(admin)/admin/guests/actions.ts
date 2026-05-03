@@ -10,13 +10,13 @@ import {
 } from "@/lib/guests/db";
 import { adminReplacePlusOnesForGuest } from "@/lib/plus-ones/db";
 
+const NULLABLE = new Set(["observation"]);
+
 function fdToObj(formData: FormData): Record<string, unknown> {
   const obj: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
-    if (typeof value === "string") {
-      if (value === "") obj[key] = null;
-      else obj[key] = value;
-    }
+    if (typeof value !== "string") continue;
+    obj[key] = value === "" && NULLABLE.has(key) ? null : value;
   }
   return obj;
 }

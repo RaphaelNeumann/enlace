@@ -12,32 +12,44 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
   revalidatePath("/admin/site");
 }
 
+// Fields that the schema treats as nullable; an empty string in the form
+// should be persisted as null for these.
+const NULLABLE_FIELDS = new Set([
+  "monogramInitialsOverride",
+  "weddingDate",
+  "venueAddressForMaps",
+  "siteTitleEn",
+  "metaDescriptionEn",
+  "ogImageStoragePath",
+  "heroIllustrationStoragePath",
+]);
+
+const VISIBILITY_FLAGS = [
+  "showHero",
+  "showCeremonyReception",
+  "showDressCode",
+  "showStory",
+  "showGifts",
+  "showTips",
+  "showFaq",
+  "showPhotoGallery",
+  "photoGalleryAsSubpage",
+] as const;
+
 function formDataToInput(formData: FormData): Record<string, unknown> {
   const obj: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
-    if (typeof value === "string") {
-      // Booleans come as "on" or absent (HTML form convention).
-      if (value === "on") {
-        obj[key] = true;
-      } else if (value === "") {
-        obj[key] = null;
-      } else {
-        obj[key] = value;
-      }
+    if (typeof value !== "string") continue;
+    if (value === "on") {
+      obj[key] = true;
+    } else if (value === "" && NULLABLE_FIELDS.has(key)) {
+      obj[key] = null;
+    } else {
+      obj[key] = value;
     }
   }
   // Visibility flags absent from the form mean "off" (unchecked) — set to false.
-  for (const flag of [
-    "showHero",
-    "showCeremonyReception",
-    "showDressCode",
-    "showStory",
-    "showGifts",
-    "showTips",
-    "showFaq",
-    "showPhotoGallery",
-    "photoGalleryAsSubpage",
-  ]) {
+  for (const flag of VISIBILITY_FLAGS) {
     obj[flag] = obj[flag] === true;
   }
   return obj;
