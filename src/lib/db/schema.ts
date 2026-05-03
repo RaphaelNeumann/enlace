@@ -126,6 +126,7 @@ export const programacaoCards = pgTable("programacao_cards", {
   addressEn: text("address_en"),
   mapsUrl: text("maps_url"),
   iconKey: text("icon_key").notNull().default(""),
+  iconImageStoragePath: text("icon_image_storage_path"),
   isVisible: boolean("is_visible").notNull().default(true),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().default(sql`now()`),
 });
@@ -148,6 +149,8 @@ export const dressCode = pgTable(
     menBodyPt: text("men_body_pt").notNull().default(""),
     menBodyEn: text("men_body_en"),
     iconKey: text("icon_key").notNull().default(""),
+    womenIconImageStoragePath: text("women_icon_image_storage_path"),
+    menIconImageStoragePath: text("men_icon_image_storage_path"),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().default(sql`now()`),
   },
   (t) => [check("dress_code_singleton", sql`${t.id} = 'default'`)],

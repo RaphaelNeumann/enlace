@@ -27,7 +27,7 @@ function formatDateTimeForInput(d: Date | null): string {
 export default async function AdminSitePage() {
   const settings = await getSiteSettings();
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Configurações do site</h1>
         <p className="text-sm opacity-70">
@@ -181,7 +181,7 @@ function Field({
         type={type}
         name={name}
         defaultValue={defaultValue}
-        className="rounded border px-3 py-2"
+        className="w-full rounded border px-3 py-2"
       />
       {hint ? <span className="text-xs opacity-60">{hint}</span> : null}
     </label>
@@ -202,7 +202,7 @@ function Select({
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="font-medium">{label}</span>
-      <select name={name} defaultValue={defaultValue} className="rounded border px-3 py-2">
+      <select name={name} defaultValue={defaultValue} className="w-full rounded border px-3 py-2">
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

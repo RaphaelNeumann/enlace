@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { adminUpdateProgramacaoCard } from "@/lib/programacao/db";
 
-const NULLABLE = new Set(["titleEn", "addressEn", "mapsUrl", "date"]);
+const NULLABLE = new Set([
+  "titleEn",
+  "addressEn",
+  "mapsUrl",
+  "date",
+  "iconImageStoragePath",
+]);
 
 export async function updateCardAction(id: "ceremony" | "reception", formData: FormData): Promise<void> {
   const session = await auth();

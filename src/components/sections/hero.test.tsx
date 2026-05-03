@@ -222,7 +222,7 @@ describe("Hero", () => {
     expect(imgs[0].tagName.toLowerCase()).toBe("svg");
   });
 
-  it("applies a negative top margin to the illustration when overlap > 0", () => {
+  it("exposes desktop and mobile (half) overlap CSS vars consumed by responsive classes when overlap > 0", () => {
     render(
       <Hero
         settings={makeSettings({
@@ -236,10 +236,14 @@ describe("Hero", () => {
       .getAllByRole("img")
       .find((el) => el.getAttribute("src") === "https://cdn.example.com/v.jpg");
     expect(venueImg).toBeDefined();
-    expect((venueImg as HTMLImageElement).style.marginTop).toBe("-80px");
+    const style = (venueImg as HTMLImageElement).style;
+    expect(style.getPropertyValue("--hero-overlap")).toBe("-80px");
+    expect(style.getPropertyValue("--hero-overlap-mobile")).toBe("-40px");
+    expect(venueImg!.className).toMatch(/mt-\[var\(--hero-overlap-mobile\)\]/);
+    expect(venueImg!.className).toMatch(/md:mt-\[var\(--hero-overlap\)\]/);
   });
 
-  it("omits margin-top when overlap is 0", () => {
+  it("does not set the overlap CSS vars when overlap is 0", () => {
     render(
       <Hero
         settings={makeSettings({
@@ -252,6 +256,8 @@ describe("Hero", () => {
     const venueImg = screen
       .getAllByRole("img")
       .find((el) => el.getAttribute("src") === "https://cdn.example.com/v.jpg");
-    expect((venueImg as HTMLImageElement).style.marginTop).toBe("");
+    const style = (venueImg as HTMLImageElement).style;
+    expect(style.getPropertyValue("--hero-overlap")).toBe("");
+    expect(style.getPropertyValue("--hero-overlap-mobile")).toBe("");
   });
 });

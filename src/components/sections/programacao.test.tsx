@@ -14,6 +14,7 @@ function makeCard(overrides: Partial<ProgramacaoCard> = {}): ProgramacaoCard {
     addressEn: null,
     mapsUrl: null,
     iconKey: "",
+    iconImageStoragePath: null,
     isVisible: true,
     updatedAt: new Date(),
     ...overrides,
@@ -139,7 +140,7 @@ describe("Programacao", () => {
     expect(cardHeading.textContent).toBe("Recepção");
   });
 
-  it("formats the date in the active locale", () => {
+  it("formats the date as dd.mm.yyyy", () => {
     render(
       <Programacao
         cards={[
@@ -152,6 +153,72 @@ describe("Programacao", () => {
         locale="pt"
       />,
     );
-    expect(screen.getByText(/20\/10\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/20\.10\.2026/)).toBeInTheDocument();
+  });
+
+  it("renders an icon image when iconImageStoragePath is set and a Supabase URL is provided", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({
+            id: "ceremony",
+            titlePt: "Cerimônia",
+            iconImageStoragePath: "icons/ring.png",
+          }),
+        ]}
+        supabaseProjectUrl="https://abc.supabase.co"
+      />,
+    );
+    const img = document.querySelector(
+      'img[src="https://abc.supabase.co/storage/v1/object/public/site/icons/ring.png"]',
+    );
+    expect(img).not.toBeNull();
+  });
+
+  it("uses an absolute http(s) URL verbatim for the icon image", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({
+            id: "ceremony",
+            titlePt: "Cerimônia",
+            iconImageStoragePath: "https://cdn.example.com/ring.svg",
+          }),
+        ]}
+      />,
+    );
+    const img = document.querySelector('img[src="https://cdn.example.com/ring.svg"]');
+    expect(img).not.toBeNull();
+  });
+
+  it("does not render an icon image when the path is set but supabaseProjectUrl is missing", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({
+            id: "ceremony",
+            titlePt: "Cerimônia",
+            iconImageStoragePath: "icons/ring.png",
+          }),
+        ]}
+      />,
+    );
+    expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("does not render an icon image when iconImageStoragePath is null", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({
+            id: "ceremony",
+            titlePt: "Cerimônia",
+            iconImageStoragePath: null,
+          }),
+        ]}
+        supabaseProjectUrl="https://abc.supabase.co"
+      />,
+    );
+    expect(document.querySelector("img")).toBeNull();
   });
 });

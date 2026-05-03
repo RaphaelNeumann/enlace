@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Cormorant_Garamond } from "next/font/google";
+import { Cormorant_Garamond, Cinzel } from "next/font/google";
 
 /**
  * Boheme Floral — commercial display font, licensed by the project owner
@@ -24,4 +24,20 @@ export const fontCormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-export const allFontVariables = [fontDisplay.variable, fontCormorant.variable].join(" ");
+/**
+ * Cinzel — Roman/engraved serif used for the wedding-invitation date line
+ * and countdown. Pairs cleanly with Boheme Floral (display) and Cormorant
+ * Garamond (body), and reads well in tracked-caps small sizes.
+ */
+export const fontCinzel = Cinzel({
+  weight: ["400", "500", "600"],
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-caps",
+  display: "swap",
+});
+
+export const allFontVariables = [
+  fontDisplay.variable,
+  fontCormorant.variable,
+  fontCinzel.variable,
+].join(" ");

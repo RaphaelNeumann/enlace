@@ -1,0 +1,1 @@
+ALTER TABLE "programacao_cards" ADD COLUMN "icon_image_storage_path" text;

@@ -5,7 +5,7 @@ import { updateStoryAction } from "./actions";
 export default async function AdminStoryPage() {
   const story = await getStoryContent();
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-6">
       <h1 className="text-2xl font-semibold">Nossa história</h1>
       <ConfirmingForm
         action={updateStoryAction}
@@ -19,7 +19,7 @@ export default async function AdminStoryPage() {
             name="bodyPt"
             defaultValue={story.bodyPt}
             rows={8}
-            className="rounded border px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -28,7 +28,7 @@ export default async function AdminStoryPage() {
             name="bodyEn"
             defaultValue={story.bodyEn ?? ""}
             rows={8}
-            className="rounded border px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         {[1, 2, 3].map((n) => (
@@ -41,7 +41,7 @@ export default async function AdminStoryPage() {
                   `photo${n}StoragePath` as "photo1StoragePath" | "photo2StoragePath" | "photo3StoragePath"
                 ] as string | null) ?? ""
               }
-              className="rounded border px-3 py-2"
+              className="w-full rounded border px-3 py-2"
               placeholder="story/photo-1.jpg"
             />
           </label>

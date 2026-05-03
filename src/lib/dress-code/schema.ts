@@ -17,6 +17,8 @@ export const dressCodeUpdateSchema = z.object({
   menBodyPt: text(2000),
   menBodyEn: textOptional(2000),
   iconKey: text(60),
+  womenIconImageStoragePath: textOptional(500),
+  menIconImageStoragePath: textOptional(500),
 });
 
 export type DressCodeUpdate = z.infer<typeof dressCodeUpdateSchema>;

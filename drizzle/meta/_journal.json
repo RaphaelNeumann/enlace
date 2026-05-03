@@ -36,6 +36,20 @@
       "when": 1777777880411,
       "tag": "0004_freezing_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777779060845,
+      "tag": "0005_square_iceman",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777780995305,
+      "tag": "0006_foamy_thundra",
+      "breakpoints": true
     }
   ]
 }

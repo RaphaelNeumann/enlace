@@ -7,7 +7,7 @@ import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 export default async function AdminPhotosPage() {
   const photos = await listPhotos();
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
       <h1 className="text-2xl font-semibold">Galeria de fotos</h1>
 
       <section className="border rounded p-4 space-y-2">

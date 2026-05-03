@@ -18,6 +18,7 @@ import { renderPix } from "@/lib/pix/render";
 import {
   createGiftCheckoutAction,
   submitGiftMessageAction,
+  recomputePixBrCodeAction,
 } from "@/app/api/gifts/checkout/actions";
 import { SiteFooter, formatCoupleNames } from "@/components/site-footer";
 
@@ -47,14 +48,16 @@ export default async function HomePage() {
   const rsvpHref = rsvpHrefFromEnv();
   const pixKey = process.env.PIX_KEY?.trim() ?? null;
   const pixRecipient = process.env.PIX_RECIPIENT_NAME?.trim() ?? null;
-  const pixCity = process.env.PIX_CITY?.trim() ?? null;
+  // Only PIX_KEY is strictly required by the BR-Code spec — the generator
+  // falls back to "BRASIL" / "RECIPIENT" when city/name are missing.
+  const pixCity = process.env.PIX_CITY?.trim() || "BRASIL";
   const hasMercadoPago = Boolean(process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim());
   const pixBrCodeMap: Record<string, ReturnType<typeof renderPix> | null> = {};
-  if (pixKey && pixRecipient && pixCity) {
+  if (pixKey) {
     for (const g of gifts) {
       pixBrCodeMap[g.id] = renderPix({
         pixKey,
-        recipientName: pixRecipient,
+        recipientName: pixRecipient ?? "",
         city: pixCity,
         amountCents: g.suggestedAmountCents ?? undefined,
       });
@@ -68,9 +71,16 @@ export default async function HomePage() {
         <Hero settings={settings} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
       ) : null}
       {settings.showCeremonyReception ? (
-        <Programacao cards={programacao} locale="pt" rsvpHref={rsvpHref} />
+        <Programacao
+          cards={programacao}
+          locale="pt"
+          rsvpHref={rsvpHref}
+          supabaseProjectUrl={supabaseProjectUrl}
+        />
       ) : null}
-      {settings.showDressCode ? <DressCodeSection content={dress} locale="pt" /> : null}
+      {settings.showDressCode ? (
+        <DressCodeSection content={dress} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
+      ) : null}
       {settings.showStory ? (
         <Story content={story} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
       ) : null}
@@ -85,6 +95,7 @@ export default async function HomePage() {
           supabaseProjectUrl={supabaseProjectUrl}
           createMpCheckoutAction={createGiftCheckoutAction}
           submitMessageAction={submitGiftMessageAction}
+          recomputePixAction={recomputePixBrCodeAction}
         />
       ) : null}
       {settings.showTips ? <TipsSection categories={tipCategories} locale="pt" /> : null}

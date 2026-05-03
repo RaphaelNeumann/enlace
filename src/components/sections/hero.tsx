@@ -113,12 +113,18 @@ export function Hero({
             )}
           </h1>
           {subtitle ? (
-            <p className="text-lg md:text-xl tracking-[0.18em]">{subtitle}</p>
+            <p
+              className="text-lg md:text-xl tracking-[0.18em]"
+              style={{ fontFamily: "var(--font-caps)" }}
+            >
+              {subtitle}
+            </p>
           ) : null}
           {countdown && countdown.state !== "hidden" ? (
             <p
               aria-live="polite"
               className="text-lg md:text-xl tracking-[0.16em] uppercase"
+              style={{ fontFamily: "var(--font-caps)" }}
             >
               {countdown.state === "today"
                 ? locale === "pt"
@@ -135,13 +141,15 @@ export function Hero({
           <img
             src={heroIllustrationUrl}
             alt={`${firstLine || "Local"}${secondLine ? ` & ${secondLine}` : ""}`.trim()}
-            className="block w-full h-auto relative"
-            style={{
-              marginTop:
-                settings.heroIllustrationOverlapPx > 0
-                  ? `-${settings.heroIllustrationOverlapPx}px`
-                  : undefined,
-            }}
+            className="block w-full h-auto relative mt-[var(--hero-overlap-mobile)] md:mt-[var(--hero-overlap)]"
+            style={
+              settings.heroIllustrationOverlapPx > 0
+                ? ({
+                    ["--hero-overlap" as string]: `-${settings.heroIllustrationOverlapPx}px`,
+                    ["--hero-overlap-mobile" as string]: `-${Math.floor(settings.heroIllustrationOverlapPx / 2)}px`,
+                  } as React.CSSProperties)
+                : undefined
+            }
           />
         ) : null}
       </div>

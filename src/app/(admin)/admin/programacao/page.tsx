@@ -1,5 +1,6 @@
 import { listProgramacao } from "@/lib/programacao/db";
 import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { UploadField } from "@/components/admin/UploadField";
 import { updateCardAction } from "./actions";
 
 function dateToInput(d: Date | null): string {
@@ -15,7 +16,7 @@ export default async function AdminProgramacaoPage() {
     return order.indexOf(a.id) - order.indexOf(b.id);
   });
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
       <h1 className="text-2xl font-semibold">Programação</h1>
       {ordered.map((card) => (
         <section key={card.id} className="border rounded p-4 space-y-3">
@@ -45,6 +46,16 @@ export default async function AdminProgramacaoPage() {
               className="w-full rounded border px-3 py-2"
             />
             <input name="iconKey" defaultValue={card.iconKey} placeholder="Ícone (rings, glasses, ...)" className="w-full rounded border px-3 py-2" />
+            <UploadField
+              bucket="site"
+              pathFieldName="iconImageStoragePath"
+              defaultPath={card.iconImageStoragePath}
+              label="Imagem do ícone (substitui o ícone padrão)"
+            />
+            <p className="text-xs opacity-60">
+              Opcional. Quando uma imagem é enviada, ela aparece no topo do
+              cartão. Aceita também colar uma URL absoluta (https://…).
+            </p>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="isVisible" defaultChecked={card.isVisible} />
               Mostrar este cartão no site

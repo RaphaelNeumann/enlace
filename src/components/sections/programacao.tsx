@@ -1,10 +1,13 @@
 import type { ProgramacaoCard } from "@/lib/programacao/db";
 import type { Locale } from "@/lib/hero/format-date";
+import { publicUrl } from "@/lib/storage/supabase";
 
 export interface ProgramacaoProps {
   cards: ProgramacaoCard[];
   locale?: Locale;
   rsvpHref?: string | null;
+  /** When set, allows resolving iconImageStoragePath into a public URL. */
+  supabaseProjectUrl?: string;
 }
 
 const TITLES_FALLBACK: Record<string, { pt: string; en: string }> = {
@@ -16,17 +19,25 @@ function pickText(pt: string, en: string | null, locale: Locale): string {
   return locale === "en" && en ? en : pt;
 }
 
-function formatDate(d: Date | null, locale: Locale): string {
+function formatDate(d: Date | null): string {
   if (!d) return "";
-  const fmt = new Intl.DateTimeFormat(locale === "pt" ? "pt-BR" : "en-US", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-  return fmt.format(d);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}.${d.getUTCFullYear()}`;
 }
 
-export function Programacao({ cards, locale = "pt", rsvpHref = null }: ProgramacaoProps) {
+export function Programacao({
+  cards,
+  locale = "pt",
+  rsvpHref = null,
+  supabaseProjectUrl,
+}: ProgramacaoProps) {
+  function resolveIconImage(rawPath: string | null | undefined): string | null {
+    const path = rawPath?.trim();
+    if (!path) return null;
+    if (/^https?:\/\//.test(path)) return path;
+    if (!supabaseProjectUrl) return null;
+    return publicUrl({ projectUrl: supabaseProjectUrl, bucket: "site", path });
+  }
   const visible = cards
     .filter((c) => c.isVisible)
     .sort((a, b) => {
@@ -40,19 +51,20 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
       className="py-16 px-6"
       aria-labelledby="programacao-heading"
       style={{
-        // Translucent sage tint so the html-level paper texture reads
-        // clearly through the section. Higher transparency = more grain.
-        backgroundColor: "color-mix(in srgb, var(--color-secondary) 55%, transparent)",
+        // Sage tint #7c8150 painted full-bleed on top of the html-level
+        // paper texture. Lower opacity so the paper grain reads through.
+        backgroundColor: "color-mix(in srgb, #7c8150 55%, transparent)",
       }}
     >
-      <h2
-        id="programacao-heading"
-        className="text-4xl text-center mb-10"
-        style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
-      >
-        {locale === "pt" ? "Programação" : "Schedule"}
-      </h2>
-      <div className="mx-auto max-w-2xl flex flex-col gap-6">
+      <div className="mx-auto max-w-5xl">
+        <h2
+          id="programacao-heading"
+          className="text-7xl md:text-8xl text-center mb-10"
+          style={{ fontFamily: "var(--font-display)", color: "#ffffff" }}
+        >
+          {locale === "pt" ? "Programação" : "Schedule"}
+        </h2>
+        <div className="mx-auto max-w-5xl flex flex-col gap-6">
         {visible.map((card) => {
           const fallback = TITLES_FALLBACK[card.id];
           const title =
@@ -60,53 +72,90 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
             card.titlePt ||
             (fallback ? fallback[locale] : "");
           const address = pickText(card.addressPt, card.addressEn, locale);
-          const dateLabel = formatDate(card.date, locale);
+          const dateLabel = formatDate(card.date);
           const showRsvp = card.id === rsvpCardId && rsvpHref;
+          const iconImageUrl = resolveIconImage(card.iconImageStoragePath);
           return (
             <article
               key={card.id}
-              className="rounded-lg p-8 text-center space-y-4"
+              className="rounded-lg p-10 text-center space-y-7"
               style={{
                 backgroundColor: "var(--color-card)",
-                color: "var(--color-card-foreground)",
-                border: "1px solid color-mix(in srgb, var(--color-primary) 50%, transparent)",
+                // Owner-chosen sage tone for all card text, including the
+                // title, date/time/address and the Google Maps link/icon
+                // (currentColor inheritance).
+                color: "#5b6946",
+                border: "1px solid color-mix(in srgb, #5b6946 50%, transparent)",
               }}
             >
-              <p className="text-sm tracking-[0.2em] uppercase">
-                {dateLabel}
-              </p>
+              {iconImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={iconImageUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="mx-auto h-auto w-[35%] object-contain"
+                />
+              ) : null}
               <h3
-                className="text-4xl"
-                style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
+                className="text-6xl md:text-7xl"
+                style={{ fontFamily: "var(--font-display)" }}
               >
                 {title}
               </h3>
-              {card.time ? (
-                <p className="text-sm tracking-[0.16em] uppercase">{card.time}</p>
+              {dateLabel || card.time ? (
+                <p
+                  className="text-lg md:text-xl tracking-[0.18em] uppercase"
+                  style={{ fontFamily: "var(--font-caps)" }}
+                >
+                  {[dateLabel, card.time].filter(Boolean).join(" - ")}
+                </p>
               ) : null}
-              {address ? <p className="text-sm whitespace-pre-line">{address}</p> : null}
+              {address ? (
+                <p
+                  className="text-lg md:text-xl tracking-[0.16em] whitespace-pre-line"
+                  style={{ fontFamily: "var(--font-caps)" }}
+                >
+                  {address}
+                </p>
+              ) : null}
               {card.mapsUrl ? (
-                <p>
+                <div className="flex flex-col items-center gap-4">
+                  <svg
+                    data-testid="maps-pin-icon"
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="w-[15%] h-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
                   <a
                     href={card.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block text-xs tracking-[0.2em] uppercase border-b"
-                    style={{ borderColor: "var(--color-primary)" }}
+                    className="text-lg md:text-xl tracking-[0.16em] underline underline-offset-4"
+                    style={{ fontFamily: "var(--font-caps)" }}
                     aria-label={`Abrir ${title} no Google Maps (abre em nova aba)`}
                   >
                     Google Maps
                   </a>
-                </p>
+                </div>
               ) : null}
               {showRsvp ? (
                 <p>
                   <a
                     href={rsvpHref}
-                    className="inline-block text-xs tracking-[0.2em] uppercase rounded border px-4 py-2"
+                    className="inline-block text-lg md:text-xl tracking-[0.18em] uppercase rounded px-8 py-4"
                     style={{
-                      borderColor: "var(--color-primary)",
-                      color: "var(--color-primary)",
+                      fontFamily: "var(--font-caps)",
+                      backgroundColor: "#5b6946",
+                      color: "var(--color-card)",
                     }}
                   >
                     {locale === "pt" ? "Confirme sua presença" : "Confirm your attendance"}
@@ -116,6 +165,7 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
             </article>
           );
         })}
+        </div>
       </div>
     </section>
   );

@@ -6,7 +6,7 @@ import { createFaqAction, deleteFaqAction, updateFaqAction } from "./actions";
 export default async function AdminFaqPage() {
   const entries = await listFaq();
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
       <h1 className="text-2xl font-semibold">Perguntas frequentes</h1>
 
       <section className="space-y-3 border rounded p-4">

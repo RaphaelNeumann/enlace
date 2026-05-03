@@ -19,6 +19,10 @@ export interface GiftsSectionProps {
     senderName: string,
     message: string,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  recomputePixAction: (
+    giftId: string,
+    amountCents: number | null,
+  ) => Promise<{ ok: true; brCode: string; svg: string } | { ok: false; error: string }>;
 }
 
 function pickText(pt: string, en: string | null, locale: Locale): string {
@@ -34,11 +38,18 @@ function formatBrl(cents: number | null): string {
 }
 
 export function GiftsSection(props: GiftsSectionProps) {
-  const { gifts, locale = "pt", pixBrCodeMap, pixKey, hasMercadoPago, supabaseProjectUrl, createMpCheckoutAction, submitMessageAction } = props;
+  const { gifts, locale = "pt", pixBrCodeMap, pixKey, hasMercadoPago, supabaseProjectUrl, createMpCheckoutAction, submitMessageAction, recomputePixAction } = props;
   const visible = gifts.filter((g) => g.isVisible);
   const [openId, setOpenId] = useState<string | null>(null);
   if (visible.length === 0) return null;
   const open = visible.find((g) => g.id === openId) ?? null;
+  function resolvePhoto(rawPath: string | null | undefined): string | null {
+    const path = rawPath?.trim();
+    if (!path) return null;
+    if (/^https?:\/\//.test(path)) return path;
+    if (!supabaseProjectUrl) return null;
+    return publicUrl({ projectUrl: supabaseProjectUrl, bucket: "gifts", path });
+  }
   return (
     <section className="py-20 px-6" aria-labelledby="gifts-heading">
       <h2
@@ -50,9 +61,7 @@ export function GiftsSection(props: GiftsSectionProps) {
       </h2>
       <div className="mx-auto max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-4">
         {visible.map((g) => {
-          const photo = g.photoStoragePath && supabaseProjectUrl
-            ? publicUrl({ projectUrl: supabaseProjectUrl, bucket: "gifts", path: g.photoStoragePath })
-            : null;
+          const photo = resolvePhoto(g.photoStoragePath);
           return (
             <button
               key={g.id}
@@ -89,6 +98,7 @@ export function GiftsSection(props: GiftsSectionProps) {
           onClose={() => setOpenId(null)}
           createMpCheckoutAction={createMpCheckoutAction}
           submitMessageAction={submitMessageAction}
+          recomputePixAction={recomputePixAction}
         />
       ) : null}
     </section>
@@ -104,18 +114,24 @@ interface GiftDialogProps {
   onClose: () => void;
   createMpCheckoutAction: GiftsSectionProps["createMpCheckoutAction"];
   submitMessageAction: GiftsSectionProps["submitMessageAction"];
+  recomputePixAction: GiftsSectionProps["recomputePixAction"];
 }
 
-function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, createMpCheckoutAction, submitMessageAction }: GiftDialogProps) {
+function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, createMpCheckoutAction, submitMessageAction, recomputePixAction }: GiftDialogProps) {
   const [pending, startTransition] = useTransition();
   const [mpError, setMpError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [msgState, setMsgState] = useState<"idle" | "sent" | "error">("idle");
   const [msgError, setMsgError] = useState<string | null>(null);
+  const [currentPix, setCurrentPix] = useState(pixBrCode ?? null);
+  const [currentAmountCents, setCurrentAmountCents] = useState<number | null>(
+    gift.suggestedAmountCents ?? null,
+  );
+  const [editOpen, setEditOpen] = useState(false);
 
   function copyPixCode() {
-    if (!pixBrCode) return;
-    navigator.clipboard?.writeText(pixBrCode.brCode).then(
+    if (!currentPix) return;
+    navigator.clipboard?.writeText(currentPix.brCode).then(
       () => {
         setCopyState("copied");
         setTimeout(() => setCopyState("idle"), 2000);
@@ -154,8 +170,8 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
     });
   }
 
-  const showAmount = gift.suggestedAmountCents != null;
-  const amountLabel = showAmount ? formatBrl(gift.suggestedAmountCents) : "";
+  const showAmount = currentAmountCents != null;
+  const amountLabel = showAmount ? formatBrl(currentAmountCents) : "";
   return (
     <div
       role="dialog"
@@ -167,10 +183,16 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
       <div
         onClick={(e) => e.stopPropagation()}
         className="max-w-md w-full rounded p-6 max-h-[90vh] overflow-y-auto space-y-4"
-        style={{ backgroundColor: "var(--color-card)", color: "var(--color-card-foreground)" }}
+        style={{
+          backgroundColor: "var(--color-card)",
+          color: "var(--color-card-foreground)",
+          // Apply Cinzel to every text node inside the dialog (title + body
+          // copy + form fields) — owner asked for a single typeface here.
+          fontFamily: "var(--font-caps)",
+        }}
       >
         <button type="button" onClick={onClose} aria-label="Fechar" className="float-right text-sm opacity-70">✕</button>
-        <h3 className="text-2xl" style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}>
+        <h3 className="text-2xl" style={{ color: "var(--color-primary)" }}>
           {pickText(gift.titlePt, gift.titleEn, locale)}
         </h3>
         {gift.descriptionPt ? (
@@ -178,15 +200,36 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
             {pickText(gift.descriptionPt, gift.descriptionEn, locale)}
           </p>
         ) : null}
-        {pixBrCode && pixKey ? (
+        {currentPix && pixKey ? (
           <div className="space-y-2 border-t pt-4">
             <p className="text-xs uppercase tracking-widest opacity-70">PIX</p>
             <div
               className="mx-auto w-48 h-48 flex items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: pixBrCode.svg }}
+              dangerouslySetInnerHTML={{ __html: currentPix.svg }}
             />
             <p className="text-xs opacity-70 break-all">Chave: {pixKey}</p>
-            {showAmount ? <p className="text-sm">Valor sugerido: {amountLabel}</p> : null}
+            {showAmount ? (
+              <p className="text-sm">
+                Valor sugerido: {amountLabel}{" "}
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="underline underline-offset-2"
+                >
+                  alterar
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="underline underline-offset-2"
+                >
+                  Definir um valor
+                </button>
+              </p>
+            )}
             <button type="button" onClick={copyPixCode} className="rounded border px-3 py-1 text-sm">
               {copyState === "copied" ? "Copiado!" : "Copiar código PIX"}
             </button>
@@ -256,6 +299,103 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, onClose, 
             <p className="text-xs" style={{ color: "var(--color-accent)" }}>{msgError}</p>
           ) : null}
         </form>
+      </div>
+      {editOpen ? (
+        <EditAmountDialog
+          initialCents={currentAmountCents ?? gift.suggestedAmountCents ?? 10000}
+          pending={pending}
+          onCancel={() => setEditOpen(false)}
+          onConfirm={(newCents) => {
+            startTransition(async () => {
+              const r = await recomputePixAction(gift.id, newCents);
+              if (r.ok) {
+                setCurrentPix({ brCode: r.brCode, svg: r.svg });
+                setCurrentAmountCents(newCents);
+                setEditOpen(false);
+              }
+            });
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+interface EditAmountDialogProps {
+  initialCents: number;
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: (cents: number) => void;
+}
+
+function EditAmountDialog({ initialCents, pending, onCancel, onConfirm }: EditAmountDialogProps) {
+  const [value, setValue] = useState((initialCents / 100).toFixed(2));
+  const [error, setError] = useState<string | null>(null);
+  function submit() {
+    const n = Number(value.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) {
+      setError("Informe um valor maior que zero.");
+      return;
+    }
+    onConfirm(Math.round(n * 100));
+  }
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onCancel}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-w-sm w-full rounded p-6 space-y-3"
+        style={{
+          backgroundColor: "var(--color-card)",
+          color: "var(--color-card-foreground)",
+          fontFamily: "var(--font-caps)",
+        }}
+      >
+        <h4 className="text-lg" style={{ color: "var(--color-primary)" }}>
+          Alterar valor
+        </h4>
+        <label className="block text-sm space-y-1">
+          <span>Valor (R$)</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={value}
+            onChange={(e) => {
+              setValue(e.currentTarget.value);
+              setError(null);
+            }}
+            className="w-full rounded border px-3 py-2 text-sm"
+            autoFocus
+          />
+        </label>
+        {error ? (
+          <p className="text-xs" style={{ color: "var(--color-accent)" }}>{error}</p>
+        ) : null}
+        <div className="flex gap-2 justify-end pt-1">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded border px-3 py-1 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={pending}
+            className="rounded border px-3 py-1 text-sm"
+            style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
+          >
+            {pending ? "Atualizando..." : "Atualizar"}
+          </button>
+        </div>
       </div>
     </div>
   );

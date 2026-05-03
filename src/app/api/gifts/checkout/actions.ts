@@ -5,6 +5,7 @@ import { getGift } from "@/lib/gifts/db";
 import { createMercadoPagoClient } from "@/lib/mercadopago/client";
 import { createGiftMessageInDb } from "@/lib/gifts/db";
 import { createRateLimiter } from "@/lib/rate-limit/rate-limit";
+import { renderPix } from "@/lib/pix/render";
 
 const messageLimiter = createRateLimiter({ max: 10, windowMs: 60 * 60 * 1000 });
 
@@ -29,6 +30,46 @@ export async function createGiftCheckoutAction(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro inesperado";
     return { ok: false, error: message };
+  }
+}
+
+/**
+ * Re-builds the PIX BR-Code + QR SVG for a gift using a custom amount
+ * (the guest may want to pay more or less than the suggested value). Pix
+ * key, recipient name and city stay env-driven — only the amount comes
+ * from the client.
+ */
+export async function recomputePixBrCodeAction(
+  giftId: string,
+  amountCents: number | null,
+): Promise<
+  | { ok: true; brCode: string; svg: string }
+  | { ok: false; error: string }
+> {
+  const pixKey = process.env.PIX_KEY?.trim();
+  if (!pixKey) return { ok: false, error: "PIX não configurado." };
+  const gift = await getGift(giftId);
+  if (!gift || !gift.isVisible) return { ok: false, error: "Presente não disponível." };
+  let amount: number | undefined;
+  if (amountCents != null) {
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      return { ok: false, error: "Valor inválido." };
+    }
+    amount = Math.round(amountCents);
+  }
+  const recipientName = process.env.PIX_RECIPIENT_NAME?.trim() ?? "";
+  const city = process.env.PIX_CITY?.trim() || "BRASIL";
+  try {
+    const { brCode, svg } = renderPix({
+      pixKey,
+      recipientName,
+      city,
+      amountCents: amount,
+    });
+    return { ok: true, brCode, svg };
+  } catch (err) {
+    const m = err instanceof Error ? err.message : "Erro";
+    return { ok: false, error: m };
   }
 }
 

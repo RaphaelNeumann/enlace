@@ -11,6 +11,8 @@ const NULLABLE = new Set([
   "womenBodyEn",
   "menTitleEn",
   "menBodyEn",
+  "womenIconImageStoragePath",
+  "menIconImageStoragePath",
 ]);
 
 export async function updateDressCodeAction(formData: FormData): Promise<void> {

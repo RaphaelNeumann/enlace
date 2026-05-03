@@ -25,7 +25,7 @@ export default async function AdminHomePage() {
   const declined = guests.filter((g) => g.rsvpStatus === "declined").length;
   const pending = guests.filter((g) => g.rsvpStatus === "pending").length;
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+    <main className="mx-auto max-w-5xl px-6 py-10 space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Painel</h1>
         <div className="text-sm">
