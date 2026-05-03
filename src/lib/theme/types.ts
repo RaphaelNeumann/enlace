@@ -27,7 +27,7 @@ export const themeRadiusSchema = z.object({
   full: rem,
 });
 
-export const fontPairSchema = z.enum(["pinyon-cormorant"]);
+export const fontPairSchema = z.enum(["boheme-cormorant"]);
 
 /**
  * Optional paper-texture image overlaid on the page background. Accepts

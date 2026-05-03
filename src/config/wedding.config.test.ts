@@ -3,7 +3,7 @@ import { theme, wedding } from "./wedding.config";
 
 describe("wedding.config", () => {
   it("exports a valid theme resolved from the aquarela-sage preset", () => {
-    expect(theme.fontPair).toBe("pinyon-cormorant");
+    expect(theme.fontPair).toBe("boheme-cormorant");
     expect(theme.mode).toBe("light");
     expect(theme.colors.primary.toLowerCase()).toBe("#7e8b6e");
   });

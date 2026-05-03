@@ -24,7 +24,7 @@ export const aquarelaSage: Theme = {
     lg: "0.75rem",
     full: "9999px",
   },
-  fontPair: "pinyon-cormorant",
+  fontPair: "boheme-cormorant",
   textureUrl: "/themes/aquarela-sage/paper.jpg",
   textureOverlay: 70,
 };

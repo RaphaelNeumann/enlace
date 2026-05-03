@@ -10,7 +10,7 @@ describe("defineTheme", () => {
     expect(theme.colors.primary).toMatch(/^#[0-9a-f]{6}$/i);
     expect(theme.colors.card).toBeDefined();
     expect(theme.colors.border).toBeDefined();
-    expect(theme.fontPair).toBe("pinyon-cormorant");
+    expect(theme.fontPair).toBe("boheme-cormorant");
     expect(theme.radius.sm).toMatch(/rem$|px$/);
     expect(theme.radius.md).toMatch(/rem$|px$/);
     expect(theme.radius.lg).toMatch(/rem$|px$/);
@@ -67,12 +67,12 @@ describe("defineTheme", () => {
         lg: "0.75rem",
         full: "9999px",
       },
-      fontPair: "pinyon-cormorant",
+      fontPair: "boheme-cormorant",
       textureUrl: null,
       textureOverlay: 100,
     });
     expect(theme.colors.primary.toLowerCase()).toBe("#0070f3");
-    expect(theme.fontPair).toBe("pinyon-cormorant");
+    expect(theme.fontPair).toBe("boheme-cormorant");
   });
 
   it("throws on an unknown preset name", () => {

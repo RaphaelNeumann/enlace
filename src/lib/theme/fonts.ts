@@ -1,16 +1,20 @@
-import { Pinyon_Script, Cormorant_Garamond } from "next/font/google";
+import localFont from "next/font/local";
+import { Cormorant_Garamond } from "next/font/google";
 
 /**
- * Pinyon Script is the classic copperplate-style wedding-invitation
- * calligraphy. Long descenders, generous flourishes on capitals, drawn
- * strokes — much more ornate than the previous Allura. Single weight
- * (400) on Google Fonts.
+ * Boheme Floral — commercial display font, licensed by the project owner
+ * and hosted locally at src/fonts/BohemeFloral.ttf. next/font/local
+ * inlines and self-hosts it (no external CDN, no CSP entry needed).
+ *
+ * Generous swash caps, floral flourishes, drawn strokes — the most
+ * "wedding-invitation" feel available so far.
  */
-export const fontDisplay = Pinyon_Script({
-  weight: "400",
-  subsets: ["latin"],
+export const fontDisplay = localFont({
+  src: "../../fonts/BohemeFloral.ttf",
   variable: "--font-display",
   display: "swap",
+  weight: "400",
+  style: "normal",
 });
 
 export const fontCormorant = Cormorant_Garamond({
