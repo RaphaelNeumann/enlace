@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "monogram_image_storage_path" text;

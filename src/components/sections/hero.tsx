@@ -1,15 +1,23 @@
 import { Monogram, deriveInitials } from "@/components/monogram";
 import { formatHeroSubtitle, type Locale } from "@/lib/hero/format-date";
 import { computeCountdown } from "@/lib/hero/countdown";
+import { publicUrl } from "@/lib/storage/supabase";
 import type { SiteSettings } from "@/lib/site-settings/get";
 
 export interface HeroProps {
   settings: SiteSettings;
   locale?: Locale;
   now?: Date;
+  /** When set, allows resolving monogramImageStoragePath into a public URL. */
+  supabaseProjectUrl?: string;
 }
 
-export function Hero({ settings, locale = "pt", now = new Date() }: HeroProps) {
+export function Hero({
+  settings,
+  locale = "pt",
+  now = new Date(),
+  supabaseProjectUrl,
+}: HeroProps) {
   const initials =
     settings.monogramInitialsOverride ??
     deriveInitials(settings.partner1ShortName, settings.partner2ShortName);
@@ -31,16 +39,41 @@ export function Hero({ settings, locale = "pt", now = new Date() }: HeroProps) {
     locale,
   );
   const countdown = computeCountdown(settings.weddingDate, now);
+  // A custom monogram image takes precedence over the generated SVG. We
+  // accept either a Supabase Storage path (resolved to a public URL) or
+  // an absolute http(s) URL the admin pasted in.
+  const monogramImageUrl = (() => {
+    const path = settings.monogramImageStoragePath?.trim();
+    if (!path) return null;
+    if (/^https?:\/\//.test(path)) return path;
+    if (!supabaseProjectUrl) return null;
+    return publicUrl({ projectUrl: supabaseProjectUrl, bucket: "site", path });
+  })();
+  const monogramAltLabel =
+    settings.partner1ShortName && settings.partner2ShortName
+      ? `Monograma de ${settings.partner1ShortName} e ${settings.partner2ShortName}`
+      : "Monograma";
   return (
     <section className="text-center py-16 px-6 space-y-8" aria-labelledby="hero-heading">
       <div style={{ color: "var(--color-primary)" }}>
-        <Monogram
-          partner1ShortName={settings.partner1ShortName}
-          partner2ShortName={settings.partner2ShortName}
-          override={initials}
-          size={120}
-          className="mx-auto"
-        />
+        {monogramImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={monogramImageUrl}
+            alt={monogramAltLabel}
+            width={120}
+            height={120}
+            className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
+          />
+        ) : (
+          <Monogram
+            partner1ShortName={settings.partner1ShortName}
+            partner2ShortName={settings.partner2ShortName}
+            override={initials}
+            size={120}
+            className="mx-auto"
+          />
+        )}
       </div>
       <h1
         id="hero-heading"

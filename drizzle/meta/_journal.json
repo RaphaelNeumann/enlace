@@ -22,6 +22,13 @@
       "when": 1777774911883,
       "tag": "0002_cuddly_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777775697478,
+      "tag": "0003_new_spitfire",
+      "breakpoints": true
     }
   ]
 }

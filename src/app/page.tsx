@@ -64,7 +64,9 @@ export default async function HomePage() {
   }
   return (
     <main className="flex-1">
-      {settings.showHero ? <Hero settings={settings} locale="pt" /> : null}
+      {settings.showHero ? (
+        <Hero settings={settings} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
+      ) : null}
       {settings.showCeremonyReception ? (
         <Programacao cards={programacao} locale="pt" rsvpHref={rsvpHref} />
       ) : null}

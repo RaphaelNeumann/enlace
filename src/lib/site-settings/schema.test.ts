@@ -40,10 +40,19 @@ describe("siteSettingsUpdateSchema", () => {
       ogImageStoragePath: null,
       weddingDate: null,
       monogramInitialsOverride: null,
+      monogramImageStoragePath: null,
     });
     expect(out.siteTitleEn).toBeNull();
     expect(out.ogImageStoragePath).toBeNull();
     expect(out.weddingDate).toBeNull();
+    expect(out.monogramImageStoragePath).toBeNull();
+  });
+
+  it("accepts a Supabase storage path for monogramImageStoragePath", () => {
+    const out = siteSettingsUpdateSchema.parse({
+      monogramImageStoragePath: "monograms/fd.png",
+    });
+    expect(out.monogramImageStoragePath).toBe("monograms/fd.png");
   });
 
   it("rejects strings exceeding the configured cap", () => {

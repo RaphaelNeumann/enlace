@@ -12,6 +12,7 @@ export const siteSettingsUpdateSchema = z.object({
   partner2ShortName: text(60).default(""),
   partnersOrder: partnersOrderSchema.default("p1-p2"),
   monogramInitialsOverride: textOptional(8),
+  monogramImageStoragePath: textOptional(500),
   weddingDate: z.coerce.date().nullable().optional(),
   weddingTimeZone: text(64).default("America/Sao_Paulo"),
   venueShortName: text(120).default(""),

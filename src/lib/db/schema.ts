@@ -89,6 +89,7 @@ export const siteSettings = pgTable(
     partner2ShortName: text("partner2_short_name").notNull().default(""),
     partnersOrder: partnersOrderEnum("partners_order").notNull().default("p1-p2"),
     monogramInitialsOverride: text("monogram_initials_override"),
+    monogramImageStoragePath: text("monogram_image_storage_path"),
     weddingDate: timestamp("wedding_date", { mode: "date" }),
     weddingTimeZone: text("wedding_time_zone").notNull().default("America/Sao_Paulo"),
     venueShortName: text("venue_short_name").notNull().default(""),

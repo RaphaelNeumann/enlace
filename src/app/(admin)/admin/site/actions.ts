@@ -16,6 +16,7 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
 // should be persisted as null for these.
 const NULLABLE_FIELDS = new Set([
   "monogramInitialsOverride",
+  "monogramImageStoragePath",
   "weddingDate",
   "venueAddressForMaps",
   "siteTitleEn",

@@ -22,6 +22,7 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     metaDescriptionEn: null,
     ogImageStoragePath: null,
     heroIllustrationStoragePath: null,
+    monogramImageStoragePath: null,
     photoGalleryAsSubpage: false,
     showHero: true,
     showCeremonyReception: true,
@@ -114,5 +115,60 @@ describe("Hero", () => {
     render(<Hero settings={makeSettings()} now={new Date("2099-01-01")} />);
     const svg = screen.getByRole("img");
     expect(svg.textContent).toContain("F&D");
+  });
+
+  it("renders an <img> when monogramImageStoragePath is set and a Supabase URL is provided", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          monogramImageStoragePath: "monograms/fd.png",
+        })}
+        supabaseProjectUrl="https://abc.supabase.co"
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const img = screen.getByRole("img");
+    expect(img.tagName.toLowerCase()).toBe("img");
+    expect(img.getAttribute("src")).toBe(
+      "https://abc.supabase.co/storage/v1/object/public/site/monograms/fd.png",
+    );
+    expect(img.getAttribute("alt")).toMatch(/Fernanda/);
+    expect(img.getAttribute("alt")).toMatch(/Daniel/);
+  });
+
+  it("uses an absolute http(s) URL verbatim when monogramImageStoragePath is one", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          monogramImageStoragePath: "https://example.com/monogram.svg",
+        })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    expect(screen.getByRole("img").getAttribute("src")).toBe(
+      "https://example.com/monogram.svg",
+    );
+  });
+
+  it("falls back to the SVG monogram when the storage path is set but supabaseProjectUrl is missing", () => {
+    render(
+      <Hero
+        settings={makeSettings({ monogramImageStoragePath: "monograms/fd.png" })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const svg = screen.getByRole("img");
+    expect(svg.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("ignores empty / whitespace-only monogramImageStoragePath", () => {
+    render(
+      <Hero
+        settings={makeSettings({ monogramImageStoragePath: "   " })}
+        supabaseProjectUrl="https://abc.supabase.co"
+        now={new Date("2099-01-01")}
+      />,
+    );
+    expect(screen.getByRole("img").tagName.toLowerCase()).toBe("svg");
   });
 });

@@ -1,5 +1,6 @@
 import { getSiteSettings } from "@/lib/site-settings/get";
 import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { UploadField } from "@/components/admin/UploadField";
 import { updateSiteSettingsAction } from "./actions";
 
 const VISIBILITY_FLAGS = [
@@ -63,6 +64,16 @@ export default async function AdminSitePage() {
             defaultValue={settings.monogramInitialsOverride ?? ""}
             hint="Opcional. Deixe vazio para derivar dos apelidos."
           />
+          <UploadField
+            bucket="site"
+            pathFieldName="monogramImageStoragePath"
+            defaultPath={settings.monogramImageStoragePath}
+            label="Imagem de monograma (substitui as iniciais)"
+          />
+          <p className="text-xs opacity-60">
+            Opcional. Quando uma imagem é enviada, ela substitui o monograma SVG
+            gerado a partir das iniciais.
+          </p>
         </section>
 
         <section className="space-y-3">
