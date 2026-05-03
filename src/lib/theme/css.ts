@@ -32,6 +32,12 @@ export function themeToCssVars(theme: Theme): Record<string, string> {
   for (const key of Object.keys(theme.radius) as (keyof Theme["radius"])[]) {
     out[radiusVarMap[key]] = theme.radius[key];
   }
+  // Background texture: emit a fully-formed url(...) value so the variable
+  // can be plugged straight into `background-image:`. When unset, emit
+  // `none` so the property has a valid CSS value.
+  out["--background-texture"] = theme.textureUrl
+    ? `url("${theme.textureUrl}")`
+    : "none";
   return out;
 }
 

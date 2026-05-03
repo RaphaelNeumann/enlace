@@ -29,11 +29,26 @@ export const themeRadiusSchema = z.object({
 
 export const fontPairSchema = z.enum(["allura-cormorant"]);
 
+/**
+ * Optional paper-texture image overlaid on the page background. Accepts
+ * either an absolute URL (https://…) or a path relative to the public root
+ * (e.g. /themes/aquarela-sage/paper.jpg). `null` disables the overlay.
+ */
+export const textureUrlSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (s) => s.startsWith("/") || /^https?:\/\//.test(s),
+    "expected an absolute URL or a path starting with /",
+  )
+  .nullable();
+
 export const themeSchema = z.object({
   mode: z.enum(["light", "dark"]),
   colors: themeColorsSchema,
   radius: themeRadiusSchema,
   fontPair: fontPairSchema,
+  textureUrl: textureUrlSchema.default(null),
 });
 
 export type Theme = z.infer<typeof themeSchema>;

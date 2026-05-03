@@ -40,6 +40,22 @@ describe("themeToCssVars", () => {
   });
 });
 
+describe("themeToCssVars — texture", () => {
+  it("emits --background-texture as url(\"…\") when textureUrl is set", () => {
+    const theme = defineTheme("aquarela-sage");
+    const vars = themeToCssVars(theme);
+    expect(vars["--background-texture"]).toBe(
+      'url("/themes/aquarela-sage/paper.jpg")',
+    );
+  });
+
+  it("emits --background-texture: none when textureUrl is null", () => {
+    const theme = defineTheme("aquarela-sage", { textureUrl: null });
+    const vars = themeToCssVars(theme);
+    expect(vars["--background-texture"]).toBe("none");
+  });
+});
+
 describe("themeToCssBlock", () => {
   it("renders a :root selector containing every theme variable", () => {
     const theme = defineTheme("aquarela-sage");

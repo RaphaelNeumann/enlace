@@ -27,6 +27,9 @@ export default async function RootLayout({
         className="min-h-full flex flex-col"
         style={{
           backgroundColor: "var(--color-background)",
+          backgroundImage: "var(--background-texture)",
+          backgroundRepeat: "repeat",
+          backgroundSize: "auto",
           color: "var(--color-foreground)",
           fontFamily: "var(--font-body, serif)",
         }}
