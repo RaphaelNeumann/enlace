@@ -15,6 +15,13 @@
       "when": 1777757655396,
       "tag": "0001_optimal_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777774911883,
+      "tag": "0002_cuddly_rattler",
+      "breakpoints": true
     }
   ]
 }

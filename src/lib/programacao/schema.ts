@@ -22,6 +22,7 @@ export const programacaoCardUpdateSchema = z.object({
   addressEn: textOptional(300),
   mapsUrl: httpsUrlOptional,
   iconKey: text(60),
+  isVisible: z.boolean().default(true),
 });
 
 export type ProgramacaoCardId = z.infer<typeof programacaoCardIdSchema>;

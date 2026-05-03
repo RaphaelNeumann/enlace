@@ -27,11 +27,14 @@ function formatDate(d: Date | null, locale: Locale): string {
 }
 
 export function Programacao({ cards, locale = "pt", rsvpHref = null }: ProgramacaoProps) {
-  if (cards.length === 0) return null;
-  const ordered = [...cards].sort((a, b) => {
-    const order = ["ceremony", "reception"];
-    return order.indexOf(a.id) - order.indexOf(b.id);
-  });
+  const visible = cards
+    .filter((c) => c.isVisible)
+    .sort((a, b) => {
+      const order = ["ceremony", "reception"];
+      return order.indexOf(a.id) - order.indexOf(b.id);
+    });
+  if (visible.length === 0) return null;
+  const rsvpCardId = visible[0]?.id;
   return (
     <section
       className="py-16 px-6"
@@ -42,11 +45,15 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
         backgroundColor: "color-mix(in srgb, var(--color-secondary) 55%, transparent)",
       }}
     >
-      <h2 id="programacao-heading" className="sr-only">
+      <h2
+        id="programacao-heading"
+        className="text-4xl text-center mb-10"
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
+      >
         {locale === "pt" ? "Programação" : "Schedule"}
       </h2>
-      <div className="mx-auto max-w-4xl grid md:grid-cols-2 gap-6">
-        {ordered.map((card) => {
+      <div className="mx-auto max-w-2xl flex flex-col gap-6">
+        {visible.map((card) => {
           const fallback = TITLES_FALLBACK[card.id];
           const title =
             (locale === "en" && card.titleEn) ||
@@ -54,6 +61,7 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
             (fallback ? fallback[locale] : "");
           const address = pickText(card.addressPt, card.addressEn, locale);
           const dateLabel = formatDate(card.date, locale);
+          const showRsvp = card.id === rsvpCardId && rsvpHref;
           return (
             <article
               key={card.id}
@@ -91,7 +99,7 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
                   </a>
                 </p>
               ) : null}
-              {card.id === "ceremony" && rsvpHref ? (
+              {showRsvp ? (
                 <p>
                   <a
                     href={rsvpHref}

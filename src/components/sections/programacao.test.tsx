@@ -14,6 +14,7 @@ function makeCard(overrides: Partial<ProgramacaoCard> = {}): ProgramacaoCard {
     addressEn: null,
     mapsUrl: null,
     iconKey: "",
+    isVisible: true,
     updatedAt: new Date(),
     ...overrides,
   } as ProgramacaoCard;
@@ -23,6 +24,23 @@ describe("Programacao", () => {
   it("returns null when no cards are provided", () => {
     const { container } = render(<Programacao cards={[]} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("returns null when every card is hidden", () => {
+    const { container } = render(
+      <Programacao
+        cards={[
+          makeCard({ id: "ceremony", titlePt: "C", isVisible: false }),
+          makeCard({ id: "reception", titlePt: "R", isVisible: false }),
+        ]}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders the visible section title (Programação)", () => {
+    render(<Programacao cards={[makeCard({ titlePt: "Cerimônia" })]} locale="pt" />);
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Programação");
   });
 
   it("renders ceremony before reception regardless of input order", () => {
@@ -37,6 +55,20 @@ describe("Programacao", () => {
     const headings = screen.getAllByRole("heading", { level: 3 });
     expect(headings[0].textContent).toBe("Cerimônia");
     expect(headings[1].textContent).toBe("Recepção");
+  });
+
+  it("hides cards whose isVisible flag is false (only-reception case)", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({ id: "ceremony", titlePt: "Cerimônia", isVisible: false }),
+          makeCard({ id: "reception", titlePt: "Recepção", isVisible: true }),
+        ]}
+      />,
+    );
+    const cardHeadings = screen.getAllByRole("heading", { level: 3 });
+    expect(cardHeadings).toHaveLength(1);
+    expect(cardHeadings[0].textContent).toBe("Recepção");
   });
 
   it("falls back to default titles when titlePt is empty", () => {
@@ -75,7 +107,7 @@ describe("Programacao", () => {
     expect(link.getAttribute("target")).toBe("_blank");
   });
 
-  it("renders the RSVP button only on the ceremony card when rsvpHref is provided", () => {
+  it("renders the RSVP button only on the first visible card", () => {
     render(
       <Programacao
         cards={[
@@ -87,8 +119,24 @@ describe("Programacao", () => {
     );
     const rsvp = screen.getByRole("link", { name: /Confirme sua presença/ });
     expect(rsvp.getAttribute("href")).toBe("/rsvp/abc");
-    // Only one RSVP link, on ceremony
     expect(screen.getAllByRole("link", { name: /Confirme sua presença/ })).toHaveLength(1);
+  });
+
+  it("RSVP button moves to reception when ceremony is hidden", () => {
+    render(
+      <Programacao
+        cards={[
+          makeCard({ id: "ceremony", titlePt: "Cerimônia", isVisible: false }),
+          makeCard({ id: "reception", titlePt: "Recepção", isVisible: true }),
+        ]}
+        rsvpHref="/rsvp/abc"
+      />,
+    );
+    const rsvp = screen.getByRole("link", { name: /Confirme sua presença/ });
+    expect(rsvp.getAttribute("href")).toBe("/rsvp/abc");
+    // The card next to the RSVP button should be Recepção
+    const cardHeading = screen.getByRole("heading", { level: 3 });
+    expect(cardHeading.textContent).toBe("Recepção");
   });
 
   it("formats the date in the active locale", () => {

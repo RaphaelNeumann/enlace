@@ -124,6 +124,7 @@ export const programacaoCards = pgTable("programacao_cards", {
   addressEn: text("address_en"),
   mapsUrl: text("maps_url"),
   iconKey: text("icon_key").notNull().default(""),
+  isVisible: boolean("is_visible").notNull().default(true),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().default(sql`now()`),
 });
 

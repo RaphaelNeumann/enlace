@@ -1,0 +1,1 @@
+ALTER TABLE "programacao_cards" ADD COLUMN "is_visible" boolean DEFAULT true NOT NULL;

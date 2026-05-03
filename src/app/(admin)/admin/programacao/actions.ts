@@ -11,8 +11,12 @@ export async function updateCardAction(id: "ceremony" | "reception", formData: F
   const obj: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
     if (typeof value !== "string") continue;
-    obj[key] = value === "" && NULLABLE.has(key) ? null : value;
+    if (value === "on") obj[key] = true;
+    else if (value === "" && NULLABLE.has(key)) obj[key] = null;
+    else obj[key] = value;
   }
+  // Checkboxes that aren't ticked don't post — default to false explicitly.
+  if (obj.isVisible !== true) obj.isVisible = false;
   await adminUpdateProgramacaoCard(id, obj, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/programacao");

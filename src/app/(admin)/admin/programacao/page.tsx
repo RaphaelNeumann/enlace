@@ -45,6 +45,10 @@ export default async function AdminProgramacaoPage() {
               className="w-full rounded border px-3 py-2"
             />
             <input name="iconKey" defaultValue={card.iconKey} placeholder="Ícone (rings, glasses, ...)" className="w-full rounded border px-3 py-2" />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="isVisible" defaultChecked={card.isVisible} />
+              Mostrar este cartão no site
+            </label>
           </ConfirmingForm>
         </section>
       ))}
