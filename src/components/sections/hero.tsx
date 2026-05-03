@@ -39,16 +39,18 @@ export function Hero({
     locale,
   );
   const countdown = computeCountdown(settings.weddingDate, now);
-  // A custom monogram image takes precedence over the generated SVG. We
-  // accept either a Supabase Storage path (resolved to a public URL) or
-  // an absolute http(s) URL the admin pasted in.
-  const monogramImageUrl = (() => {
-    const path = settings.monogramImageStoragePath?.trim();
+  // Resolve a storage-path-or-absolute-URL into a usable <img src>.
+  // Returns null when nothing is set, or when only a Supabase path is
+  // provided but the project URL isn't configured.
+  function resolveImage(rawPath: string | null | undefined): string | null {
+    const path = rawPath?.trim();
     if (!path) return null;
     if (/^https?:\/\//.test(path)) return path;
     if (!supabaseProjectUrl) return null;
     return publicUrl({ projectUrl: supabaseProjectUrl, bucket: "site", path });
-  })();
+  }
+  const monogramImageUrl = resolveImage(settings.monogramImageStoragePath);
+  const heroIllustrationUrl = resolveImage(settings.heroIllustrationStoragePath);
   const monogramAltLabel =
     settings.partner1ShortName && settings.partner2ShortName
       ? `Monograma de ${settings.partner1ShortName} e ${settings.partner2ShortName}`
@@ -125,6 +127,14 @@ export function Hero({
                 ? `Faltam ${countdown.daysRemaining} dia${countdown.daysRemaining === 1 ? "" : "s"}`
                 : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
           </p>
+        ) : null}
+        {heroIllustrationUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroIllustrationUrl}
+            alt={`${firstLine || "Local"}${secondLine ? ` & ${secondLine}` : ""}`.trim()}
+            className="block w-full h-auto mt-4"
+          />
         ) : null}
       </div>
     </section>

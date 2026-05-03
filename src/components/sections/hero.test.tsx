@@ -171,4 +171,53 @@ describe("Hero", () => {
     );
     expect(screen.getByRole("img").tagName.toLowerCase()).toBe("svg");
   });
+
+  it("renders the hero illustration at the bottom when set (Supabase path)", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          heroIllustrationStoragePath: "hero/venue.jpg",
+        })}
+        supabaseProjectUrl="https://abc.supabase.co"
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const imgs = screen.getAllByRole("img");
+    const venueImg = imgs.find((el) =>
+      (el.getAttribute("src") ?? "").includes("/hero/venue.jpg"),
+    );
+    expect(venueImg).toBeDefined();
+    expect(venueImg!.getAttribute("src")).toBe(
+      "https://abc.supabase.co/storage/v1/object/public/site/hero/venue.jpg",
+    );
+  });
+
+  it("uses an absolute http(s) URL verbatim for the hero illustration", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          heroIllustrationStoragePath: "https://cdn.example.com/venue.jpg",
+        })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const imgs = screen.getAllByRole("img");
+    const venueImg = imgs.find(
+      (el) => el.getAttribute("src") === "https://cdn.example.com/venue.jpg",
+    );
+    expect(venueImg).toBeDefined();
+  });
+
+  it("does not render a hero illustration when the field is null", () => {
+    render(
+      <Hero
+        settings={makeSettings({ heroIllustrationStoragePath: null })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    // Only the SVG monogram should be present.
+    const imgs = screen.getAllByRole("img");
+    expect(imgs).toHaveLength(1);
+    expect(imgs[0].tagName.toLowerCase()).toBe("svg");
+  });
 });

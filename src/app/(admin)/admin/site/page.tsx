@@ -74,6 +74,16 @@ export default async function AdminSitePage() {
             Opcional. Quando uma imagem é enviada, ela substitui o monograma SVG
             gerado a partir das iniciais.
           </p>
+          <UploadField
+            bucket="site"
+            pathFieldName="heroIllustrationStoragePath"
+            defaultPath={settings.heroIllustrationStoragePath}
+            label="Ilustração do convite (rodapé do cartão da capa)"
+          />
+          <p className="text-xs opacity-60">
+            Opcional. Aparece no final do cartão de convite na primeira sessão
+            do site. Aceita também colar uma URL absoluta (https://…).
+          </p>
         </section>
 
         <section className="space-y-3">
