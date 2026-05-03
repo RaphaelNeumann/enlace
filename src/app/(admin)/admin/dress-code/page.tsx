@@ -1,4 +1,5 @@
 import { getDressCode } from "@/lib/dress-code/db";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
 import { updateDressCodeAction } from "./actions";
 
 export default async function AdminDressCodePage() {
@@ -6,7 +7,12 @@ export default async function AdminDressCodePage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <h1 className="text-2xl font-semibold">Traje</h1>
-      <form action={updateDressCodeAction} className="space-y-4">
+      <ConfirmingForm
+        action={updateDressCodeAction}
+        confirmTitle="Salvar traje?"
+        confirmDescription="As mudanças aparecem no site público imediatamente."
+        className="space-y-4"
+      >
         <Field label="Headline (PT)" name="headlinePt" defaultValue={dc.headlinePt} />
         <Field label="Headline (EN)" name="headlineEn" defaultValue={dc.headlineEn ?? ""} />
         <Textarea label="Intro (PT)" name="introPt" defaultValue={dc.introPt} />
@@ -19,10 +25,7 @@ export default async function AdminDressCodePage() {
         <Field label="Homens — título (EN)" name="menTitleEn" defaultValue={dc.menTitleEn ?? ""} />
         <Textarea label="Homens — corpo (PT)" name="menBodyPt" defaultValue={dc.menBodyPt} />
         <Textarea label="Homens — corpo (EN)" name="menBodyEn" defaultValue={dc.menBodyEn ?? ""} />
-        <button type="submit" className="rounded border px-4 py-2 text-sm uppercase tracking-wider">
-          Salvar
-        </button>
-      </form>
+      </ConfirmingForm>
     </main>
   );
 }

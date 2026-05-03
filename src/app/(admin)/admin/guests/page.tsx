@@ -5,6 +5,8 @@ import {
   updateGuestAction,
   setStatusAction,
 } from "./actions";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 
 const STATUS_LABEL = {
   pending: "Pendente",
@@ -55,7 +57,12 @@ export default async function AdminGuestsPage({
 
       <section className="border rounded p-4 space-y-2">
         <h2 className="text-lg font-medium">Adicionar convidado</h2>
-        <form action={createGuestAction} className="grid grid-cols-2 gap-2">
+        <ConfirmingForm
+          action={createGuestAction}
+          confirmTitle="Adicionar convidado?"
+          submitLabel="Adicionar"
+          className="grid grid-cols-2 gap-2"
+        >
           <input name="firstName" required placeholder="Nome" className="rounded border px-3 py-2" />
           <input name="lastName" required placeholder="Sobrenome" className="rounded border px-3 py-2" />
           <input
@@ -64,12 +71,9 @@ export default async function AdminGuestsPage({
             min={0}
             defaultValue={0}
             placeholder="Acompanhantes permitidos"
-            className="rounded border px-3 py-2"
+            className="rounded border px-3 py-2 col-span-2"
           />
-          <button className="rounded border px-3 py-2 text-sm" type="submit">
-            Adicionar
-          </button>
-        </form>
+        </ConfirmingForm>
       </section>
 
       <section className="space-y-2">
@@ -89,11 +93,12 @@ export default async function AdminGuestsPage({
               </span>
             </div>
 
-            <form
+            <ConfirmingForm
               action={async (fd: FormData) => {
                 "use server";
                 await updateGuestAction(g.id, fd);
               }}
+              confirmTitle="Salvar convidado?"
               className="grid grid-cols-3 gap-2"
             >
               <input name="firstName" defaultValue={g.firstName} className="rounded border px-3 py-2 text-sm" />
@@ -112,57 +117,52 @@ export default async function AdminGuestsPage({
                 rows={2}
                 className="col-span-3 rounded border px-3 py-2 text-sm"
               />
-              <button className="col-span-3 rounded border px-3 py-1 text-sm" type="submit">
-                Salvar
-              </button>
-            </form>
+            </ConfirmingForm>
 
             <div className="flex flex-wrap gap-2">
               {g.rsvpStatus !== "confirmed" ? (
-                <form
+                <ConfirmingButton
                   action={async () => {
                     "use server";
                     await setStatusAction(g.id, "confirmed");
                   }}
-                >
-                  <button className="rounded border px-3 py-1 text-xs" type="submit">
-                    Confirmar
-                  </button>
-                </form>
+                  confirmTitle={`Confirmar presença de ${g.firstName} ${g.lastName}?`}
+                  buttonLabel="Confirmar"
+                  confirmLabel="Confirmar"
+                />
               ) : (
-                <form
+                <ConfirmingButton
                   action={async () => {
                     "use server";
                     await setStatusAction(g.id, "pending");
                   }}
-                >
-                  <button className="rounded border px-3 py-1 text-xs" type="submit">
-                    Cancelar confirmação
-                  </button>
-                </form>
+                  confirmTitle={`Cancelar confirmação de ${g.firstName} ${g.lastName}?`}
+                  buttonLabel="Cancelar confirmação"
+                  confirmLabel="Cancelar"
+                />
               )}
               {g.rsvpStatus !== "declined" ? (
-                <form
+                <ConfirmingButton
                   action={async () => {
                     "use server";
                     await setStatusAction(g.id, "declined");
                   }}
-                >
-                  <button className="rounded border px-3 py-1 text-xs" type="submit">
-                    Marcar como recusou
-                  </button>
-                </form>
+                  confirmTitle={`Marcar ${g.firstName} ${g.lastName} como recusou?`}
+                  buttonLabel="Marcar como recusou"
+                  confirmLabel="Recusou"
+                />
               ) : null}
-              <form
+              <ConfirmingButton
                 action={async () => {
                   "use server";
                   await deleteGuestAction(g.id);
                 }}
-              >
-                <button className="rounded border px-3 py-1 text-xs opacity-70" type="submit">
-                  Apagar
-                </button>
-              </form>
+                confirmTitle={`Apagar ${g.firstName} ${g.lastName}?`}
+                confirmDescription="Esta ação não pode ser desfeita e remove também os acompanhantes."
+                buttonLabel="Apagar"
+                confirmLabel="Apagar"
+                variant="danger"
+              />
             </div>
           </div>
         ))}

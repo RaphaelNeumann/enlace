@@ -1,6 +1,8 @@
 import { listPhotos } from "@/lib/photos/db";
 import { createPhotoAction, deletePhotoAction, updatePhotoAction } from "./actions";
 import { UploadField } from "@/components/admin/UploadField";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 
 export default async function AdminPhotosPage() {
   const photos = await listPhotos();
@@ -10,25 +12,19 @@ export default async function AdminPhotosPage() {
 
       <section className="border rounded p-4 space-y-2">
         <h2 className="text-lg font-medium">Adicionar foto</h2>
-        <form action={createPhotoAction} className="space-y-2">
+        <ConfirmingForm
+          action={createPhotoAction}
+          confirmTitle="Adicionar foto?"
+          submitLabel="Adicionar"
+          className="space-y-2"
+        >
           <UploadField bucket="gallery" pathFieldName="storagePath" label="Imagem" />
-          <input
-            name="captionPt"
-            placeholder="Legenda (PT, opcional)"
-            className="w-full rounded border px-3 py-2"
-          />
-          <input
-            name="captionEn"
-            placeholder="Caption (EN, opcional)"
-            className="w-full rounded border px-3 py-2"
-          />
+          <input name="captionPt" placeholder="Legenda (PT, opcional)" className="w-full rounded border px-3 py-2" />
+          <input name="captionEn" placeholder="Caption (EN, opcional)" className="w-full rounded border px-3 py-2" />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="isVisible" defaultChecked /> Visível
           </label>
-          <button type="submit" className="rounded border px-4 py-2 text-sm">
-            Adicionar
-          </button>
-        </form>
+        </ConfirmingForm>
       </section>
 
       <section className="space-y-2">
@@ -36,11 +32,12 @@ export default async function AdminPhotosPage() {
         {photos.length === 0 ? <p className="text-sm opacity-70">Nenhuma foto ainda.</p> : null}
         {photos.map((p) => (
           <div key={p.id} className="border rounded p-3 space-y-2">
-            <form
+            <ConfirmingForm
               action={async (fd: FormData) => {
                 "use server";
                 await updatePhotoAction(p.id, fd);
               }}
+              confirmTitle="Salvar foto?"
               className="space-y-2"
             >
               <UploadField
@@ -54,20 +51,18 @@ export default async function AdminPhotosPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="isVisible" defaultChecked={p.isVisible} /> Visível
               </label>
-              <button type="submit" className="rounded border px-3 py-1 text-sm">
-                Salvar
-              </button>
-            </form>
-            <form
+            </ConfirmingForm>
+            <ConfirmingButton
               action={async () => {
                 "use server";
                 await deletePhotoAction(p.id);
               }}
-            >
-              <button type="submit" className="rounded border px-3 py-1 text-sm opacity-70">
-                Apagar
-              </button>
-            </form>
+              confirmTitle="Apagar foto?"
+              confirmDescription="Esta ação não pode ser desfeita."
+              buttonLabel="Apagar"
+              confirmLabel="Apagar"
+              variant="danger"
+            />
           </div>
         ))}
       </section>

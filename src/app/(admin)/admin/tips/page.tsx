@@ -1,5 +1,7 @@
 import { listCategories, listTipsByCategory } from "@/lib/tips/db";
 import { TIP_ICON_WHITELIST } from "@/lib/tips/schema";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -20,34 +22,36 @@ export default async function AdminTipsPage() {
 
       <section className="border rounded p-4 space-y-2">
         <h2 className="text-lg font-medium">Nova categoria</h2>
-        <form action={createCategoryAction} className="space-y-2">
+        <ConfirmingForm
+          action={createCategoryAction}
+          confirmTitle="Adicionar categoria?"
+          submitLabel="Adicionar categoria"
+          className="space-y-2"
+        >
           <input name="namePt" required placeholder="Nome (PT)" className="w-full rounded border px-3 py-2" />
           <input name="nameEn" placeholder="Name (EN)" className="w-full rounded border px-3 py-2" />
           <select name="iconName" className="w-full rounded border px-3 py-2">
             <option value="">— ícone (opcional) —</option>
             {TIP_ICON_WHITELIST.map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
+              <option key={i} value={i}>{i}</option>
             ))}
           </select>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="isVisible" defaultChecked /> Visível
           </label>
-          <button type="submit" className="rounded border px-4 py-2 text-sm">
-            Adicionar categoria
-          </button>
-        </form>
+        </ConfirmingForm>
       </section>
 
       {tipsByCategory.map(({ category, tips }) => (
         <section key={category.id} className="border rounded p-4 space-y-3">
           <h2 className="text-lg font-medium">{category.namePt}</h2>
-          <form
+          <ConfirmingForm
             action={async (fd: FormData) => {
               "use server";
               await updateCategoryAction(category.id, fd);
             }}
+            confirmTitle="Salvar categoria?"
+            submitLabel="Salvar categoria"
             className="space-y-2"
           >
             <input name="namePt" defaultValue={category.namePt} className="w-full rounded border px-3 py-2" />
@@ -55,32 +59,33 @@ export default async function AdminTipsPage() {
             <select name="iconName" defaultValue={category.iconName ?? ""} className="w-full rounded border px-3 py-2">
               <option value="">— sem ícone —</option>
               {TIP_ICON_WHITELIST.map((i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
+                <option key={i} value={i}>{i}</option>
               ))}
             </select>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="isVisible" defaultChecked={category.isVisible} /> Visível
             </label>
-            <button type="submit" className="rounded border px-3 py-1 text-sm">
-              Salvar categoria
-            </button>
-          </form>
-          <form
+          </ConfirmingForm>
+          <ConfirmingButton
             action={async () => {
               "use server";
               await deleteCategoryAction(category.id);
             }}
-          >
-            <button type="submit" className="rounded border px-3 py-1 text-sm opacity-70">
-              Apagar categoria
-            </button>
-          </form>
+            confirmTitle="Apagar categoria?"
+            confirmDescription="Todas as dicas dentro dela também serão apagadas."
+            buttonLabel="Apagar categoria"
+            confirmLabel="Apagar"
+            variant="danger"
+          />
 
           <details>
             <summary className="cursor-pointer text-sm font-medium">+ Adicionar dica</summary>
-            <form action={createTipAction} className="space-y-2 mt-2">
+            <ConfirmingForm
+              action={createTipAction}
+              confirmTitle="Adicionar dica?"
+              submitLabel="Adicionar dica"
+              className="space-y-2 mt-2"
+            >
               <input type="hidden" name="categoryId" value={category.id} />
               <input name="titlePt" required placeholder="Título (PT)" className="w-full rounded border px-3 py-2" />
               <input name="titleEn" placeholder="Title (EN)" className="w-full rounded border px-3 py-2" />
@@ -90,20 +95,18 @@ export default async function AdminTipsPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="isVisible" defaultChecked /> Visível
               </label>
-              <button type="submit" className="rounded border px-3 py-1 text-sm">
-                Adicionar dica
-              </button>
-            </form>
+            </ConfirmingForm>
           </details>
 
           <ul className="space-y-2">
             {tips.map((t) => (
               <li key={t.id} className="border rounded p-3 space-y-2">
-                <form
+                <ConfirmingForm
                   action={async (fd: FormData) => {
                     "use server";
                     await updateTipAction(t.id, fd);
                   }}
+                  confirmTitle="Salvar dica?"
                   className="space-y-2"
                 >
                   <input name="titlePt" defaultValue={t.titlePt} className="w-full rounded border px-3 py-2" />
@@ -114,20 +117,17 @@ export default async function AdminTipsPage() {
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="isVisible" defaultChecked={t.isVisible} /> Visível
                   </label>
-                  <button type="submit" className="rounded border px-3 py-1 text-xs">
-                    Salvar
-                  </button>
-                </form>
-                <form
+                </ConfirmingForm>
+                <ConfirmingButton
                   action={async () => {
                     "use server";
                     await deleteTipAction(t.id);
                   }}
-                >
-                  <button type="submit" className="rounded border px-3 py-1 text-xs opacity-70">
-                    Apagar
-                  </button>
-                </form>
+                  confirmTitle="Apagar dica?"
+                  buttonLabel="Apagar"
+                  confirmLabel="Apagar"
+                  variant="danger"
+                />
               </li>
             ))}
           </ul>

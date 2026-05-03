@@ -1,4 +1,5 @@
 import { getStoryContent } from "@/lib/story/db";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
 import { updateStoryAction } from "./actions";
 
 export default async function AdminStoryPage() {
@@ -6,7 +7,12 @@ export default async function AdminStoryPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <h1 className="text-2xl font-semibold">Nossa história</h1>
-      <form action={updateStoryAction} className="space-y-4">
+      <ConfirmingForm
+        action={updateStoryAction}
+        confirmTitle="Salvar nossa história?"
+        confirmDescription="As mudanças aparecem no site público imediatamente."
+        className="space-y-4"
+      >
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Texto (PT)</span>
           <textarea
@@ -41,12 +47,9 @@ export default async function AdminStoryPage() {
           </label>
         ))}
         <p className="text-xs opacity-60">
-          Upload via Supabase Studio (bucket <code>site</code>) e cole o caminho aqui. Upload UI integrada vem em uma próxima iteração.
+          Upload via Supabase Studio (bucket <code>site</code>) e cole o caminho aqui.
         </p>
-        <button type="submit" className="rounded border px-4 py-2 text-sm uppercase tracking-wider">
-          Salvar
-        </button>
-      </form>
+      </ConfirmingForm>
     </main>
   );
 }

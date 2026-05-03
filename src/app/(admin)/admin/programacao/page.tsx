@@ -1,4 +1,5 @@
 import { listProgramacao } from "@/lib/programacao/db";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
 import { updateCardAction } from "./actions";
 
 function dateToInput(d: Date | null): string {
@@ -21,11 +22,13 @@ export default async function AdminProgramacaoPage() {
           <h2 className="text-lg font-medium">
             {card.id === "ceremony" ? "Cerimônia" : "Recepção"}
           </h2>
-          <form
+          <ConfirmingForm
             action={async (fd: FormData) => {
               "use server";
               await updateCardAction(card.id as "ceremony" | "reception", fd);
             }}
+            confirmTitle={`Salvar ${card.id === "ceremony" ? "Cerimônia" : "Recepção"}?`}
+            confirmDescription="As mudanças aparecem no site público imediatamente."
             className="space-y-2"
           >
             <input name="titlePt" defaultValue={card.titlePt} placeholder="Título (PT)" className="w-full rounded border px-3 py-2" />
@@ -42,10 +45,7 @@ export default async function AdminProgramacaoPage() {
               className="w-full rounded border px-3 py-2"
             />
             <input name="iconKey" defaultValue={card.iconKey} placeholder="Ícone (rings, glasses, ...)" className="w-full rounded border px-3 py-2" />
-            <button type="submit" className="rounded border px-4 py-2 text-sm">
-              Salvar
-            </button>
-          </form>
+          </ConfirmingForm>
         </section>
       ))}
     </main>

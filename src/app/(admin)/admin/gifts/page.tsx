@@ -1,6 +1,8 @@
 import { listGifts } from "@/lib/gifts/db";
 import { createGiftAction, deleteGiftAction, updateGiftAction } from "./actions";
 import { UploadField } from "@/components/admin/UploadField";
+import { ConfirmingForm } from "@/components/admin/ConfirmingForm";
+import { ConfirmingButton } from "@/components/admin/ConfirmingButton";
 
 export default async function AdminGiftsPage() {
   const items = await listGifts();
@@ -10,7 +12,12 @@ export default async function AdminGiftsPage() {
 
       <section className="border rounded p-4 space-y-2">
         <h2 className="text-lg font-medium">Adicionar presente</h2>
-        <form action={createGiftAction} className="space-y-2">
+        <ConfirmingForm
+          action={createGiftAction}
+          confirmTitle="Adicionar presente?"
+          submitLabel="Adicionar"
+          className="space-y-2"
+        >
           <input name="titlePt" required placeholder="Título (PT)" className="w-full rounded border px-3 py-2" />
           <input name="titleEn" placeholder="Title (EN)" className="w-full rounded border px-3 py-2" />
           <textarea name="descriptionPt" rows={3} placeholder="Descrição (PT)" className="w-full rounded border px-3 py-2" />
@@ -27,10 +34,7 @@ export default async function AdminGiftsPage() {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="isVisible" defaultChecked /> Visível
           </label>
-          <button type="submit" className="rounded border px-4 py-2 text-sm">
-            Adicionar
-          </button>
-        </form>
+        </ConfirmingForm>
       </section>
 
       <section className="space-y-2">
@@ -38,11 +42,12 @@ export default async function AdminGiftsPage() {
         {items.length === 0 ? <p className="text-sm opacity-70">Nenhum presente ainda.</p> : null}
         {items.map((g) => (
           <div key={g.id} className="border rounded p-4 space-y-2">
-            <form
+            <ConfirmingForm
               action={async (fd: FormData) => {
                 "use server";
                 await updateGiftAction(g.id, fd);
               }}
+              confirmTitle="Salvar presente?"
               className="space-y-2"
             >
               <input name="titlePt" defaultValue={g.titlePt} className="w-full rounded border px-3 py-2" />
@@ -66,20 +71,18 @@ export default async function AdminGiftsPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="isVisible" defaultChecked={g.isVisible} /> Visível
               </label>
-              <button type="submit" className="rounded border px-3 py-1 text-sm">
-                Salvar
-              </button>
-            </form>
-            <form
+            </ConfirmingForm>
+            <ConfirmingButton
               action={async () => {
                 "use server";
                 await deleteGiftAction(g.id);
               }}
-            >
-              <button type="submit" className="rounded border px-3 py-1 text-sm opacity-70">
-                Apagar
-              </button>
-            </form>
+              confirmTitle="Apagar presente?"
+              confirmDescription="Esta ação não pode ser desfeita."
+              buttonLabel="Apagar"
+              confirmLabel="Apagar"
+              variant="danger"
+            />
           </div>
         ))}
       </section>
