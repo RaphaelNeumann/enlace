@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "hero_illustration_overlap_px" integer DEFAULT 0 NOT NULL;

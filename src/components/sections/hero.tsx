@@ -135,7 +135,13 @@ export function Hero({
           <img
             src={heroIllustrationUrl}
             alt={`${firstLine || "Local"}${secondLine ? ` & ${secondLine}` : ""}`.trim()}
-            className="block w-full h-auto"
+            className="block w-full h-auto relative"
+            style={{
+              marginTop:
+                settings.heroIllustrationOverlapPx > 0
+                  ? `-${settings.heroIllustrationOverlapPx}px`
+                  : undefined,
+            }}
           />
         ) : null}
       </div>

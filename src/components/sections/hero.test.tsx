@@ -23,6 +23,7 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     ogImageStoragePath: null,
     heroIllustrationStoragePath: null,
     monogramImageStoragePath: null,
+    heroIllustrationOverlapPx: 0,
     photoGalleryAsSubpage: false,
     showHero: true,
     showCeremonyReception: true,
@@ -219,5 +220,38 @@ describe("Hero", () => {
     const imgs = screen.getAllByRole("img");
     expect(imgs).toHaveLength(1);
     expect(imgs[0].tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("applies a negative top margin to the illustration when overlap > 0", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          heroIllustrationStoragePath: "https://cdn.example.com/v.jpg",
+          heroIllustrationOverlapPx: 80,
+        })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const venueImg = screen
+      .getAllByRole("img")
+      .find((el) => el.getAttribute("src") === "https://cdn.example.com/v.jpg");
+    expect(venueImg).toBeDefined();
+    expect((venueImg as HTMLImageElement).style.marginTop).toBe("-80px");
+  });
+
+  it("omits margin-top when overlap is 0", () => {
+    render(
+      <Hero
+        settings={makeSettings({
+          heroIllustrationStoragePath: "https://cdn.example.com/v.jpg",
+          heroIllustrationOverlapPx: 0,
+        })}
+        now={new Date("2099-01-01")}
+      />,
+    );
+    const venueImg = screen
+      .getAllByRole("img")
+      .find((el) => el.getAttribute("src") === "https://cdn.example.com/v.jpg");
+    expect((venueImg as HTMLImageElement).style.marginTop).toBe("");
   });
 });

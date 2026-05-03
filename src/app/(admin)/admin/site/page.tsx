@@ -84,6 +84,13 @@ export default async function AdminSitePage() {
             Opcional. Aparece no final do cartão de convite na primeira sessão
             do site. Aceita também colar uma URL absoluta (https://…).
           </p>
+          <Field
+            label="Sobreposição da ilustração (px)"
+            name="heroIllustrationOverlapPx"
+            type="number"
+            defaultValue={String(settings.heroIllustrationOverlapPx ?? 0)}
+            hint="Quantos pixels a contagem regressiva sobrepõe a ilustração. 0 = sem sobreposição."
+          />
         </section>
 
         <section className="space-y-3">

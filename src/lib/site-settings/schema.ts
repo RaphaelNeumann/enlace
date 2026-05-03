@@ -23,6 +23,7 @@ export const siteSettingsUpdateSchema = z.object({
   metaDescriptionEn: textOptional(320),
   ogImageStoragePath: textOptional(500),
   heroIllustrationStoragePath: textOptional(500),
+  heroIllustrationOverlapPx: z.coerce.number().int().min(0).max(400).default(0),
   photoGalleryAsSubpage: z.boolean().default(false),
   showHero: z.boolean().default(true),
   showCeremonyReception: z.boolean().default(true),

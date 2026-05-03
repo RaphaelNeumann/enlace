@@ -100,6 +100,7 @@ export const siteSettings = pgTable(
     metaDescriptionEn: text("meta_description_en"),
     ogImageStoragePath: text("og_image_storage_path"),
     heroIllustrationStoragePath: text("hero_illustration_storage_path"),
+    heroIllustrationOverlapPx: integer("hero_illustration_overlap_px").notNull().default(0),
     photoGalleryAsSubpage: boolean("photo_gallery_as_subpage").notNull().default(false),
     showHero: boolean("show_hero").notNull().default(true),
     showCeremonyReception: boolean("show_ceremony_reception").notNull().default(true),
