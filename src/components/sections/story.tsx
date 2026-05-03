@@ -27,9 +27,9 @@ export function Story({ content, locale = "pt", supabaseProjectUrl }: StoryProps
       className="py-20 px-6 text-center"
       aria-labelledby="story-heading"
       style={{
-        // Semi-transparent sage tint so the body's paper texture shows
-        // through the section, giving it a "coloured paper" feel.
-        backgroundColor: "color-mix(in srgb, var(--color-primary) 85%, transparent)",
+        // Translucent sage tint — the html-level paper texture reads
+        // clearly through the section so it feels like "coloured paper".
+        backgroundColor: "color-mix(in srgb, var(--color-primary) 65%, transparent)",
         color: "var(--color-primary-foreground)",
       }}
     >

@@ -19,36 +19,36 @@ export default async function RootLayout({
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const themeCss = themeToCssBlock(theme);
   return (
-    <html lang="pt-BR" className={`${allFontVariables} h-full antialiased`}>
+    <html
+      lang="pt-BR"
+      className={`${allFontVariables} antialiased`}
+      // Two-layer background applied to <html> rather than <body>:
+      // the root element's background is propagated to the entire
+      // viewport canvas regardless of document scroll height, so even
+      // tall long-scroll pages always show the textured paper from top
+      // to bottom. Body stays transparent so the html background reads
+      // through everywhere (including under sections that paint a tint
+      // on top via color-mix).
+      style={{
+        backgroundColor: "var(--color-background)",
+        backgroundImage:
+          "linear-gradient(" +
+          "color-mix(in srgb, var(--color-background) var(--background-texture-overlay), transparent), " +
+          "color-mix(in srgb, var(--color-background) var(--background-texture-overlay), transparent)" +
+          "), var(--background-texture)",
+        backgroundSize: "cover, cover",
+        backgroundPosition: "center center, center center",
+        backgroundRepeat: "no-repeat, no-repeat",
+        color: "var(--color-foreground)",
+      }}
+    >
       <head>
         <style nonce={nonce} dangerouslySetInnerHTML={{ __html: themeCss }} />
       </head>
       <body
-        className="min-h-full flex flex-col"
+        className="min-h-screen flex flex-col"
         style={{
-          // Two-layer background applied to the body so it scrolls with
-          // the document (no parallax / fixed-attachment "site sliding
-          // over a frozen photo" feel).
-          //
-          // Layer 1 (top): a tinted overlay using the configured background
-          // colour, opaque up to --background-texture-overlay. The
-          // gradient is what gives the paper its tinted-paper feel —
-          // texture peeks through at the configured strength.
-          // Layer 2 (bottom): the texture itself, stretched to cover the
-          // entire body (which spans the whole document on a long-scroll
-          // page) as a single image — no tiling, no seams. Slight
-          // vertical stretch is invisible because paper grain is a
-          // near-uniform random pattern.
-          backgroundColor: "var(--color-background)",
-          backgroundImage:
-            "linear-gradient(" +
-            "color-mix(in srgb, var(--color-background) var(--background-texture-overlay), transparent), " +
-            "color-mix(in srgb, var(--color-background) var(--background-texture-overlay), transparent)" +
-            "), var(--background-texture)",
-          backgroundSize: "cover, cover",
-          backgroundPosition: "center center, center center",
-          backgroundRepeat: "no-repeat, no-repeat",
-          color: "var(--color-foreground)",
+          backgroundColor: "transparent",
           fontFamily: "var(--font-body, serif)",
         }}
       >

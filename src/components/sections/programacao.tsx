@@ -37,8 +37,9 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
       className="py-16 px-6"
       aria-labelledby="programacao-heading"
       style={{
-        // Semi-transparent tint so the body's paper texture shows through.
-        backgroundColor: "color-mix(in srgb, var(--color-secondary) 80%, transparent)",
+        // Translucent sage tint so the html-level paper texture reads
+        // clearly through the section. Higher transparency = more grain.
+        backgroundColor: "color-mix(in srgb, var(--color-secondary) 55%, transparent)",
       }}
     >
       <h2 id="programacao-heading" className="sr-only">
