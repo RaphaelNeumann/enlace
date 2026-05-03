@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { adminUpdateDressCode } from "@/lib/dress-code/db";
 
@@ -24,5 +23,4 @@ export async function updateDressCodeAction(formData: FormData): Promise<void> {
   await adminUpdateDressCode(obj, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/dress-code");
-  redirect("/admin");
 }

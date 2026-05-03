@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { adminUpdateStory } from "@/lib/story/db";
 
@@ -22,5 +21,4 @@ export async function updateStoryAction(formData: FormData): Promise<void> {
   await adminUpdateStory(obj, session);
   revalidatePath("/", "layout");
   revalidatePath("/admin/story");
-  redirect("/admin");
 }
