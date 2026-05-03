@@ -54,6 +54,16 @@ describe("themeToCssVars — texture", () => {
     const vars = themeToCssVars(theme);
     expect(vars["--background-texture"]).toBe("none");
   });
+
+  it("emits --background-texture-overlay as a CSS percentage value", () => {
+    const theme = defineTheme("aquarela-sage");
+    expect(themeToCssVars(theme)["--background-texture-overlay"]).toBe("70%");
+  });
+
+  it("--background-texture-overlay reflects per-fork overrides", () => {
+    const theme = defineTheme("aquarela-sage", { textureOverlay: 25 });
+    expect(themeToCssVars(theme)["--background-texture-overlay"]).toBe("25%");
+  });
 });
 
 describe("themeToCssBlock", () => {

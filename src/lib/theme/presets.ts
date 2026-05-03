@@ -26,6 +26,7 @@ export const aquarelaSage: Theme = {
   },
   fontPair: "allura-cormorant",
   textureUrl: "/themes/aquarela-sage/paper.jpg",
+  textureOverlay: 70,
 };
 
 export const presets = {

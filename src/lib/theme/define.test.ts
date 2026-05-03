@@ -69,6 +69,7 @@ describe("defineTheme", () => {
       },
       fontPair: "allura-cormorant",
       textureUrl: null,
+      textureOverlay: 100,
     });
     expect(theme.colors.primary.toLowerCase()).toBe("#0070f3");
     expect(theme.fontPair).toBe("allura-cormorant");
@@ -138,5 +139,23 @@ describe("defineTheme", () => {
       textureUrl: "https://cdn.example.com/paper.jpg",
     });
     expect(theme.textureUrl).toBe("https://cdn.example.com/paper.jpg");
+  });
+
+  it("aquarela-sage has a 70% texture overlay by default", () => {
+    expect(defineTheme("aquarela-sage").textureOverlay).toBe(70);
+  });
+
+  it("textureOverlay can be lowered to expose more of the texture", () => {
+    const theme = defineTheme("aquarela-sage", { textureOverlay: 30 });
+    expect(theme.textureOverlay).toBe(30);
+  });
+
+  it("textureOverlay rejects values outside 0..100", () => {
+    expect(() =>
+      defineTheme("aquarela-sage", { textureOverlay: -5 }),
+    ).toThrow();
+    expect(() =>
+      defineTheme("aquarela-sage", { textureOverlay: 101 }),
+    ).toThrow();
   });
 });

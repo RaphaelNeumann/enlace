@@ -38,6 +38,10 @@ export function themeToCssVars(theme: Theme): Record<string, string> {
   out["--background-texture"] = theme.textureUrl
     ? `url("${theme.textureUrl}")`
     : "none";
+  // How opaque the colour overlay sitting on top of the texture is.
+  // `color-mix(in srgb, var(--color-background) var(--background-texture-overlay), transparent)`
+  // produces the rgba so consumers don't have to reach back into the hex.
+  out["--background-texture-overlay"] = `${theme.textureOverlay}%`;
   return out;
 }
 

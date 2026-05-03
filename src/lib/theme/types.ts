@@ -43,12 +43,20 @@ export const textureUrlSchema = z
   )
   .nullable();
 
+/**
+ * How much of `colors.background` is painted on top of the texture, as a
+ * percentage 0..100. 0 = pure texture (no tint); 100 = solid colour
+ * (texture invisible). Tweak per fork to dial how present the paper feels.
+ */
+export const textureOverlaySchema = z.number().min(0).max(100);
+
 export const themeSchema = z.object({
   mode: z.enum(["light", "dark"]),
   colors: themeColorsSchema,
   radius: themeRadiusSchema,
   fontPair: fontPairSchema,
   textureUrl: textureUrlSchema.default(null),
+  textureOverlay: textureOverlaySchema.default(70),
 });
 
 export type Theme = z.infer<typeof themeSchema>;
