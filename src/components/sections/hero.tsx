@@ -53,22 +53,28 @@ export function Hero({
     settings.partner1ShortName && settings.partner2ShortName
       ? `Monograma de ${settings.partner1ShortName} e ${settings.partner2ShortName}`
       : "Monograma";
+  // Owner-chosen olive/sage tone for the invitation card frame, names,
+  // subtitle and monogram. Set on the wrapper as `color`, then nested
+  // elements inherit via `currentColor` (border + text).
+  const cardTone = "#434c1f";
   return (
     <section className="py-16 px-6" aria-labelledby="hero-heading">
       {/*
         The hero content sits inside a centred bordered card so the section
-        reads as the wedding invitation itself — thin sage frame, generous
-        padding, the paper texture from <html> showing through.
+        reads as the wedding invitation itself — `currentColor` everywhere
+        means a single tone change on the wrapper repaints the entire card.
+        Width is max-w-5xl (≈ 1024 px), the conventional content max-width
+        for modern responsive sites.
       */}
       <div
-        className="mx-auto max-w-2xl text-center px-8 py-12 space-y-8"
+        className="mx-auto max-w-5xl text-center px-8 py-12 space-y-8"
         style={{
-          border:
-            "1px solid color-mix(in srgb, var(--color-primary) 55%, transparent)",
+          color: cardTone,
+          border: "1px solid currentColor",
           borderRadius: "var(--radius-md)",
         }}
       >
-        <div style={{ color: "var(--color-primary)" }}>
+        <div>
           {monogramImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -91,7 +97,7 @@ export function Hero({
         <h1
           id="hero-heading"
           className="text-6xl md:text-7xl leading-tight"
-          style={{ fontFamily: "var(--font-display)", color: "var(--color-foreground)" }}
+          style={{ fontFamily: "var(--font-display)" }}
         >
           {hasBothNames ? (
             <>
@@ -104,18 +110,12 @@ export function Hero({
           )}
         </h1>
         {subtitle ? (
-          <p
-            className="text-sm tracking-[0.18em]"
-            style={{ color: "var(--color-foreground)" }}
-          >
-            {subtitle}
-          </p>
+          <p className="text-sm tracking-[0.18em]">{subtitle}</p>
         ) : null}
         {countdown && countdown.state !== "hidden" ? (
           <p
             aria-live="polite"
             className="text-sm tracking-[0.16em] uppercase"
-            style={{ color: "var(--color-primary)" }}
           >
             {countdown.state === "today"
               ? locale === "pt"
