@@ -54,65 +54,79 @@ export function Hero({
       ? `Monograma de ${settings.partner1ShortName} e ${settings.partner2ShortName}`
       : "Monograma";
   return (
-    <section className="text-center py-16 px-6 space-y-8" aria-labelledby="hero-heading">
-      <div style={{ color: "var(--color-primary)" }}>
-        {monogramImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={monogramImageUrl}
-            alt={monogramAltLabel}
-            width={120}
-            height={120}
-            className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
-          />
-        ) : (
-          <Monogram
-            partner1ShortName={settings.partner1ShortName}
-            partner2ShortName={settings.partner2ShortName}
-            override={initials}
-            size={120}
-            className="mx-auto"
-          />
-        )}
-      </div>
-      <h1
-        id="hero-heading"
-        className="text-6xl md:text-7xl leading-tight"
-        style={{ fontFamily: "var(--font-display)", color: "var(--color-foreground)" }}
+    <section className="py-16 px-6" aria-labelledby="hero-heading">
+      {/*
+        The hero content sits inside a centred bordered card so the section
+        reads as the wedding invitation itself — thin sage frame, generous
+        padding, the paper texture from <html> showing through.
+      */}
+      <div
+        className="mx-auto max-w-md text-center px-8 py-12 space-y-8"
+        style={{
+          border:
+            "1px solid color-mix(in srgb, var(--color-primary) 55%, transparent)",
+          borderRadius: "var(--radius-md)",
+        }}
       >
-        {hasBothNames ? (
-          <>
-            <span className="block">{firstLine}</span>
-            <span className="block text-5xl md:text-6xl">&amp;</span>
-            <span className="block">{secondLine}</span>
-          </>
-        ) : (
-          fallback
-        )}
-      </h1>
-      {subtitle ? (
-        <p
-          className="text-sm tracking-[0.18em]"
-          style={{ color: "var(--color-foreground)" }}
+        <div style={{ color: "var(--color-primary)" }}>
+          {monogramImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={monogramImageUrl}
+              alt={monogramAltLabel}
+              width={120}
+              height={120}
+              className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
+            />
+          ) : (
+            <Monogram
+              partner1ShortName={settings.partner1ShortName}
+              partner2ShortName={settings.partner2ShortName}
+              override={initials}
+              size={120}
+              className="mx-auto"
+            />
+          )}
+        </div>
+        <h1
+          id="hero-heading"
+          className="text-6xl md:text-7xl leading-tight"
+          style={{ fontFamily: "var(--font-display)", color: "var(--color-foreground)" }}
         >
-          {subtitle}
-        </p>
-      ) : null}
-      {countdown && countdown.state !== "hidden" ? (
-        <p
-          aria-live="polite"
-          className="text-sm tracking-[0.16em] uppercase"
-          style={{ color: "var(--color-primary)" }}
-        >
-          {countdown.state === "today"
-            ? locale === "pt"
-              ? "Hoje"
-              : "Today"
-            : locale === "pt"
-              ? `Faltam ${countdown.daysRemaining} dia${countdown.daysRemaining === 1 ? "" : "s"}`
-              : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
-        </p>
-      ) : null}
+          {hasBothNames ? (
+            <>
+              <span className="block">{firstLine}</span>
+              <span className="block text-5xl md:text-6xl">&amp;</span>
+              <span className="block">{secondLine}</span>
+            </>
+          ) : (
+            fallback
+          )}
+        </h1>
+        {subtitle ? (
+          <p
+            className="text-sm tracking-[0.18em]"
+            style={{ color: "var(--color-foreground)" }}
+          >
+            {subtitle}
+          </p>
+        ) : null}
+        {countdown && countdown.state !== "hidden" ? (
+          <p
+            aria-live="polite"
+            className="text-sm tracking-[0.16em] uppercase"
+            style={{ color: "var(--color-primary)" }}
+          >
+            {countdown.state === "today"
+              ? locale === "pt"
+                ? "Hoje"
+                : "Today"
+              : locale === "pt"
+                ? `Faltam ${countdown.daysRemaining} dia${countdown.daysRemaining === 1 ? "" : "s"}`
+                : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }
