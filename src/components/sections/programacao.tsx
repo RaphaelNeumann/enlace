@@ -36,7 +36,10 @@ export function Programacao({ cards, locale = "pt", rsvpHref = null }: Programac
     <section
       className="py-16 px-6"
       aria-labelledby="programacao-heading"
-      style={{ backgroundColor: "var(--color-secondary)" }}
+      style={{
+        // Semi-transparent tint so the body's paper texture shows through.
+        backgroundColor: "color-mix(in srgb, var(--color-secondary) 80%, transparent)",
+      }}
     >
       <h2 id="programacao-heading" className="sr-only">
         {locale === "pt" ? "Programação" : "Schedule"}

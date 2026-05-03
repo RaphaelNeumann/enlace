@@ -26,7 +26,12 @@ export function Story({ content, locale = "pt", supabaseProjectUrl }: StoryProps
     <section
       className="py-20 px-6 text-center"
       aria-labelledby="story-heading"
-      style={{ backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }}
+      style={{
+        // Semi-transparent sage tint so the body's paper texture shows
+        // through the section, giving it a "coloured paper" feel.
+        backgroundColor: "color-mix(in srgb, var(--color-primary) 85%, transparent)",
+        color: "var(--color-primary-foreground)",
+      }}
     >
       <h2
         id="story-heading"
