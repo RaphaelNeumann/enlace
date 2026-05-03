@@ -69,71 +69,73 @@ export function Hero({
         for modern responsive sites.
       */}
       <div
-        className="mx-auto max-w-5xl text-center px-8 py-12 space-y-8"
+        className="mx-auto max-w-5xl text-center overflow-hidden"
         style={{
           color: cardTone,
           border: "1px solid currentColor",
           borderRadius: "var(--radius-md)",
         }}
       >
-        <div>
-          {monogramImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={monogramImageUrl}
-              alt={monogramAltLabel}
-              width={120}
-              height={120}
-              className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
-            />
-          ) : (
-            <Monogram
-              partner1ShortName={settings.partner1ShortName}
-              partner2ShortName={settings.partner2ShortName}
-              override={initials}
-              size={120}
-              className="mx-auto"
-            />
-          )}
-        </div>
-        <h1
-          id="hero-heading"
-          className="text-8xl md:text-9xl leading-tight"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {hasBothNames ? (
-            <>
-              <span className="block">{firstLine}</span>
-              <span className="block text-6xl md:text-7xl">&amp;</span>
-              <span className="block">{secondLine}</span>
-            </>
-          ) : (
-            fallback
-          )}
-        </h1>
-        {subtitle ? (
-          <p className="text-sm tracking-[0.18em]">{subtitle}</p>
-        ) : null}
-        {countdown && countdown.state !== "hidden" ? (
-          <p
-            aria-live="polite"
-            className="text-sm tracking-[0.16em] uppercase"
+        <div className="px-8 py-12 space-y-8">
+          <div>
+            {monogramImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={monogramImageUrl}
+                alt={monogramAltLabel}
+                width={120}
+                height={120}
+                className="mx-auto h-auto max-h-32 w-auto max-w-[180px] object-contain"
+              />
+            ) : (
+              <Monogram
+                partner1ShortName={settings.partner1ShortName}
+                partner2ShortName={settings.partner2ShortName}
+                override={initials}
+                size={120}
+                className="mx-auto"
+              />
+            )}
+          </div>
+          <h1
+            id="hero-heading"
+            className="text-8xl md:text-9xl leading-tight"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            {countdown.state === "today"
-              ? locale === "pt"
-                ? "Hoje"
-                : "Today"
-              : locale === "pt"
-                ? `Faltam ${countdown.daysRemaining} dia${countdown.daysRemaining === 1 ? "" : "s"}`
-                : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
-          </p>
-        ) : null}
+            {hasBothNames ? (
+              <>
+                <span className="block">{firstLine}</span>
+                <span className="block text-6xl md:text-7xl">&amp;</span>
+                <span className="block">{secondLine}</span>
+              </>
+            ) : (
+              fallback
+            )}
+          </h1>
+          {subtitle ? (
+            <p className="text-sm tracking-[0.18em]">{subtitle}</p>
+          ) : null}
+          {countdown && countdown.state !== "hidden" ? (
+            <p
+              aria-live="polite"
+              className="text-sm tracking-[0.16em] uppercase"
+            >
+              {countdown.state === "today"
+                ? locale === "pt"
+                  ? "Hoje"
+                  : "Today"
+                : locale === "pt"
+                  ? `Faltam ${countdown.daysRemaining} dia${countdown.daysRemaining === 1 ? "" : "s"}`
+                  : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
+            </p>
+          ) : null}
+        </div>
         {heroIllustrationUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={heroIllustrationUrl}
             alt={`${firstLine || "Local"}${secondLine ? ` & ${secondLine}` : ""}`.trim()}
-            className="block w-full h-auto mt-4"
+            className="block w-full h-auto"
           />
         ) : null}
       </div>
