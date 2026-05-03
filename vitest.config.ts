@@ -5,6 +5,14 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     setupFiles: ["./vitest.setup.ts"],
+    globalSetup: ["./vitest.global-setup.ts"],
+    // Force every test worker to use the dedicated test DB regardless of
+    // the dev-time DATABASE_URL the user set in .env.local. The sibling
+    // database is provisioned by globalSetup before any test loads.
+    env: {
+      DATABASE_URL: "postgres://enlace:enlace@database:5432/enlace_test",
+      MASTER_DATABASE_URL: "postgres://enlace:enlace@database:5432/enlace",
+    },
     globals: true,
     include: ["src/**/*.test.{ts,tsx}", "src/**/__tests__/**/*.{ts,tsx}"],
     exclude: ["node_modules", ".next", "e2e"],
