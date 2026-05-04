@@ -3,12 +3,28 @@ import { headers } from "next/headers";
 import { theme } from "@/config/wedding.config";
 import { themeToCssBlock } from "@/lib/theme";
 import { allFontVariables } from "@/lib/theme/fonts";
+import { getSiteSettings } from "@/lib/site-settings/get";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "enlace",
-  description: "Wedding website",
-};
+function coupleTitle(s: {
+  partner1ShortName: string;
+  partner2ShortName: string;
+  partnersOrder: "p1-p2" | "p2-p1";
+}): string {
+  const p1 = s.partner1ShortName.trim();
+  const p2 = s.partner2ShortName.trim();
+  if (!p1 && !p2) return "enlace";
+  const [a, b] = s.partnersOrder === "p2-p1" ? [p2, p1] : [p1, p2];
+  return [a, b].filter(Boolean).join(" & ");
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return {
+    title: coupleTitle(settings),
+    description: settings.metaDescriptionPt || "Wedding website",
+  };
+}
 
 export default async function RootLayout({
   children,
