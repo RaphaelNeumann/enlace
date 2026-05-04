@@ -22,11 +22,6 @@ import {
 } from "@/app/api/gifts/checkout/actions";
 import { SiteFooter, formatCoupleNames } from "@/components/site-footer";
 
-function rsvpHrefFromEnv(): string {
-  const token = process.env.RSVP_ACCESS_TOKEN?.trim();
-  return token ? `/rsvp/${token}` : "/rsvp";
-}
-
 export default async function HomePage() {
   const [settings, programacao, dress, story, faq, tipCategories, gifts, photos] =
     await Promise.all([
@@ -45,7 +40,6 @@ export default async function HomePage() {
     partnersOrder: settings.partnersOrder,
   });
   const supabaseProjectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined;
-  const rsvpHref = rsvpHrefFromEnv();
   const pixKey = process.env.PIX_KEY?.trim() ?? null;
   const pixRecipient = process.env.PIX_RECIPIENT_NAME?.trim() ?? null;
   // Only PIX_KEY is strictly required by the BR-Code spec — the generator
@@ -78,7 +72,6 @@ export default async function HomePage() {
         <Programacao
           cards={programacao}
           locale="pt"
-          rsvpHref={rsvpHref}
           supabaseProjectUrl={supabaseProjectUrl}
         />
       ) : null}

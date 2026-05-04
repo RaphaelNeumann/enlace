@@ -5,7 +5,6 @@ import { publicUrl } from "@/lib/storage/supabase";
 export interface ProgramacaoProps {
   cards: ProgramacaoCard[];
   locale?: Locale;
-  rsvpHref?: string | null;
   /** When set, allows resolving iconImageStoragePath into a public URL. */
   supabaseProjectUrl?: string;
 }
@@ -28,7 +27,6 @@ function formatDate(d: Date | null): string {
 export function Programacao({
   cards,
   locale = "pt",
-  rsvpHref = null,
   supabaseProjectUrl,
 }: ProgramacaoProps) {
   function resolveIconImage(rawPath: string | null | undefined): string | null {
@@ -45,7 +43,6 @@ export function Programacao({
       return order.indexOf(a.id) - order.indexOf(b.id);
     });
   if (visible.length === 0) return null;
-  const rsvpCardId = visible[0]?.id;
   return (
     <section
       className="py-16 px-6"
@@ -73,7 +70,6 @@ export function Programacao({
             (fallback ? fallback[locale] : "");
           const address = pickText(card.addressPt, card.addressEn, locale);
           const dateLabel = formatDate(card.date);
-          const showRsvp = card.id === rsvpCardId && rsvpHref;
           const iconImageUrl = resolveIconImage(card.iconImageStoragePath);
           return (
             <article
@@ -146,21 +142,6 @@ export function Programacao({
                     Google Maps
                   </a>
                 </div>
-              ) : null}
-              {showRsvp ? (
-                <p>
-                  <a
-                    href={rsvpHref}
-                    className="inline-block text-lg md:text-xl tracking-[0.18em] uppercase rounded px-8 py-4"
-                    style={{
-                      fontFamily: "var(--font-caps)",
-                      backgroundColor: "#5b6946",
-                      color: "var(--color-card)",
-                    }}
-                  >
-                    {locale === "pt" ? "Confirme sua presença" : "Confirm your attendance"}
-                  </a>
-                </p>
               ) : null}
             </article>
           );

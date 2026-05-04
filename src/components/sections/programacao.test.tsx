@@ -108,36 +108,21 @@ describe("Programacao", () => {
     expect(link.getAttribute("target")).toBe("_blank");
   });
 
-  it("renders the RSVP button only on the first visible card", () => {
+  it("does not render any RSVP button — the feature is disabled site-wide", () => {
     render(
       <Programacao
         cards={[
           makeCard({ id: "ceremony", titlePt: "Cerimônia" }),
           makeCard({ id: "reception", titlePt: "Recepção" }),
         ]}
-        rsvpHref="/rsvp/abc"
       />,
     );
-    const rsvp = screen.getByRole("link", { name: /Confirme sua presença/ });
-    expect(rsvp.getAttribute("href")).toBe("/rsvp/abc");
-    expect(screen.getAllByRole("link", { name: /Confirme sua presença/ })).toHaveLength(1);
-  });
-
-  it("RSVP button moves to reception when ceremony is hidden", () => {
-    render(
-      <Programacao
-        cards={[
-          makeCard({ id: "ceremony", titlePt: "Cerimônia", isVisible: false }),
-          makeCard({ id: "reception", titlePt: "Recepção", isVisible: true }),
-        ]}
-        rsvpHref="/rsvp/abc"
-      />,
-    );
-    const rsvp = screen.getByRole("link", { name: /Confirme sua presença/ });
-    expect(rsvp.getAttribute("href")).toBe("/rsvp/abc");
-    // The card next to the RSVP button should be Recepção
-    const cardHeading = screen.getByRole("heading", { level: 3 });
-    expect(cardHeading.textContent).toBe("Recepção");
+    expect(
+      screen.queryByRole("link", { name: /Confirme sua presença/ }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: /Confirm your attendance/ }),
+    ).toBeNull();
   });
 
   it("formats the date as dd.mm.yyyy", () => {
