@@ -1,8 +1,16 @@
 export type Locale = "pt" | "en";
 
+/**
+ * Renders the wedding date as configured in /admin/site, treating the stored
+ * Date as a naive wall-clock value (UTC components = the literal hours and
+ * minutes the couple typed). The `timeZone` param is accepted but ignored —
+ * timezone-aware rendering caused the displayed hour to drift on devices
+ * whose runtime evaluated the timestamp in a different zone. Pinning to UTC
+ * components matches the convention used by Programação's date formatter.
+ */
 export function formatHeroSubtitle(
   date: Date | null | undefined,
-  timeZone: string,
+  _timeZone: string,
   locale: Locale,
 ): string | null {
   if (!date) return null;
@@ -12,16 +20,11 @@ export function formatHeroSubtitle(
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeZone,
+    timeZone: "UTC",
   });
-  const timeFmt = new Intl.DateTimeFormat(intlLocale, {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone,
-  });
+  const pad = (n: number) => String(n).padStart(2, "0");
   const datePart = dateFmt.format(date);
-  const timePart = timeFmt.format(date);
+  const timePart = `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
   const connector = locale === "pt" ? " às " : " at ";
   return `${datePart}${connector}${timePart}`.toUpperCase();
 }

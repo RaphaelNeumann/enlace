@@ -15,7 +15,9 @@ describe("formatHeroSubtitle", () => {
     // Day-of-week + day + month + year + hour
     expect(result!.toLowerCase()).toContain("outubro");
     expect(result).toContain("2026");
-    expect(result).toMatch(/16[h:]00/i);
+    // Hour is rendered from UTC components — the value the admin typed,
+    // not a timezone-converted view of it.
+    expect(result).toMatch(/19:00/);
   });
 
   it("formats the same date in English", () => {
@@ -24,11 +26,12 @@ describe("formatHeroSubtitle", () => {
     expect(result).toContain("2026");
   });
 
-  it("respects the time zone for hour rendering", () => {
-    const utcResult = formatHeroSubtitle(wedding, "UTC", "pt");
-    const sampleHour = utcResult!.match(/(\d{2})[h:](\d{2})/);
-    expect(sampleHour).not.toBeNull();
-    expect(Number(sampleHour![1])).toBe(19);
+  it("renders the hour identically regardless of the timeZone arg", () => {
+    const inSp = formatHeroSubtitle(wedding, "America/Sao_Paulo", "pt");
+    const inUtc = formatHeroSubtitle(wedding, "UTC", "pt");
+    const inTokyo = formatHeroSubtitle(wedding, "Asia/Tokyo", "pt");
+    expect(inSp).toBe(inUtc);
+    expect(inSp).toBe(inTokyo);
   });
 
   it("returns the result in upper case (small-caps emulation)", () => {
