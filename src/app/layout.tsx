@@ -6,6 +6,13 @@ import { allFontVariables } from "@/lib/theme/fonts";
 import { getSiteSettings } from "@/lib/site-settings/get";
 import "./globals.css";
 
+// Every route is dynamic by design: the nonce-based CSP (proxy.ts) and the
+// `await headers()` below already opt out of static rendering, and pages read
+// admin-managed content from the DB per request. Make it explicit so `next
+// build` never tries to prerender a page — which would hit the DB at build
+// time and time out (the home page export was failing after 60s ×3).
+export const dynamic = "force-dynamic";
+
 function coupleTitle(s: {
   partner1ShortName: string;
   partner2ShortName: string;
