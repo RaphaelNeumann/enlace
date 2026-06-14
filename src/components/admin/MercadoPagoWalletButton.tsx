@@ -62,15 +62,12 @@ function loadSdk(): Promise<void> {
 export interface MercadoPagoWalletButtonProps {
   publicKey: string;
   preferenceId: string;
-  /** Re-mount the brick when this value changes (e.g. amount edited). */
-  resetKey?: string | number;
   onError?: (message: string) => void;
 }
 
 export function MercadoPagoWalletButton({
   publicKey,
   preferenceId,
-  resetKey,
   onError,
 }: MercadoPagoWalletButtonProps) {
   const containerId = useId().replace(/[:]/g, "_");
@@ -118,10 +115,19 @@ export function MercadoPagoWalletButton({
     })();
     return () => {
       cancelled = true;
-      walletRef.current?.unmount();
+      // Only unmount when the container is still in the DOM. If it was already
+      // removed (parent re-render), MP's unmount logs "Could not find the Brick
+      // container ID '…'" — skipping it avoids that noisy console error.
+      if (typeof document !== "undefined" && document.getElementById(containerId)) {
+        try {
+          walletRef.current?.unmount();
+        } catch {
+          /* brick already torn down */
+        }
+      }
       walletRef.current = null;
     };
-  }, [publicKey, preferenceId, containerId, resetKey, onError]);
+  }, [publicKey, preferenceId, containerId, onError]);
 
   return (
     <div className="space-y-2">

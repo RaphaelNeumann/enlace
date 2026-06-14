@@ -273,7 +273,11 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, mercadoPa
     }
     let cancelled = false;
     setMpError(null);
-    setMpPreferenceId(null);
+    // Don't null the preferenceId here: that would unmount the Wallet button
+    // mid-refresh and race the async brick creation against a removed container
+    // ("Could not find the Brick container ID"). Keep the current button shown
+    // and swap to the new preferenceId once it arrives — the button re-creates
+    // the brick in its (stable) container when preferenceId changes.
     (async () => {
       const r = await createMpCheckoutAction(gift.id, currentAmountCents);
       if (cancelled) return;
@@ -414,7 +418,6 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, mercadoPa
               <MercadoPagoWalletButton
                 publicKey={mercadoPagoPublicKey}
                 preferenceId={mpPreferenceId}
-                resetKey={`${currentAmountCents}`}
                 onError={setMpError}
               />
             ) : !mpError ? (
