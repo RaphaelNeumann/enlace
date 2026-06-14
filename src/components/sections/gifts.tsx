@@ -102,7 +102,7 @@ export function GiftsSection(props: GiftsSectionProps) {
           ? "Os valores são apenas sugestões — sinta-se à vontade para alterá-los."
           : "The amounts are only suggestions — feel free to change them."}
       </p>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-lg">
         <div
           className="relative"
           onTouchStart={(e) => {
@@ -139,7 +139,7 @@ export function GiftsSection(props: GiftsSectionProps) {
                   key={g.id}
                   type="button"
                   onClick={() => setOpenId(g.id)}
-                  className="rounded p-3 border text-center"
+                  className="rounded p-2 border text-center"
                   style={{
                     borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
                     backgroundColor: "var(--color-card)",
@@ -158,9 +158,9 @@ export function GiftsSection(props: GiftsSectionProps) {
                   ) : (
                     <div className="w-full aspect-square rounded mb-2" style={{ backgroundColor: "var(--color-muted)" }} />
                   )}
-                  <p className="text-sm font-medium">{pickText(g.titlePt, g.titleEn, locale)}</p>
+                  <p className="text-xs font-medium leading-tight">{pickText(g.titlePt, g.titleEn, locale)}</p>
                   {g.suggestedAmountCents != null ? (
-                    <p className="text-base font-semibold opacity-90">{formatBrl(g.suggestedAmountCents)}</p>
+                    <p className="text-sm font-semibold opacity-90">{formatBrl(g.suggestedAmountCents)}</p>
                   ) : null}
                 </button>
               );
