@@ -49,11 +49,11 @@ export function PublicNav({
         borderColor: "color-mix(in srgb, var(--color-primary) 20%, transparent)",
       }}
     >
-      <div className="mx-auto max-w-5xl px-6 h-14 flex items-center gap-5 overflow-x-auto">
+      <div className="mx-auto max-w-5xl px-6 h-20 flex items-center gap-3 overflow-x-auto">
         {brand ? (
           <a
             href="#hero"
-            className="shrink-0 mr-auto whitespace-nowrap text-lg"
+            className="shrink-0 mr-auto whitespace-nowrap text-3xl md:text-4xl leading-none"
             style={{
               fontFamily: "var(--font-display)",
               color: "var(--color-primary)",
@@ -66,7 +66,12 @@ export function PublicNav({
           <a
             key={item.href}
             href={item.href}
-            className="shrink-0 whitespace-nowrap text-xs uppercase tracking-widest transition-opacity hover:opacity-60"
+            className="shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs uppercase tracking-widest transition hover:opacity-75"
+            style={{
+              borderColor: "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
+              color: "var(--color-foreground)",
+            }}
           >
             {item.label}
           </a>
