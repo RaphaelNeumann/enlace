@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { Gift } from "@/lib/gifts/db";
 import type { Locale } from "@/lib/hero/format-date";
 import { publicUrl } from "@/lib/storage/supabase";
@@ -71,8 +71,16 @@ export function GiftsSection(props: GiftsSectionProps) {
   const { gifts, locale = "pt", pixBrCodeMap, pixKey, hasMercadoPago, mercadoPagoPublicKey, turnstileSiteKey, supabaseProjectUrl, createMpCheckoutAction, submitMessageAction, recomputePixAction } = props;
   const visible = gifts.filter((g) => g.isVisible);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   if (visible.length === 0) return null;
   const open = visible.find((g) => g.id === openId) ?? null;
+  // Gallery: show 6 cards per page; arrows (desktop) / swipe (mobile) page through.
+  const pageSize = 6;
+  const pageCount = Math.ceil(visible.length / pageSize);
+  const current = Math.min(page, pageCount - 1);
+  const pageItems = visible.slice(current * pageSize, current * pageSize + pageSize);
+  const goTo = (p: number) => setPage(Math.max(0, Math.min(pageCount - 1, p)));
   function resolvePhoto(rawPath: string | null | undefined): string | null {
     const path = rawPath?.trim();
     if (!path) return null;
@@ -89,40 +97,108 @@ export function GiftsSection(props: GiftsSectionProps) {
       >
         {locale === "pt" ? "Lista de presentes" : "Gift catalog"}
       </h2>
-      <div className="mx-auto max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-4">
-        {visible.map((g) => {
-          const photo = resolvePhoto(g.photoStoragePath);
-          return (
+      <div className="mx-auto max-w-4xl">
+        <div
+          className="relative"
+          onTouchStart={(e) => {
+            touchStartX.current = e.changedTouches[0].clientX;
+          }}
+          onTouchEnd={(e) => {
+            if (touchStartX.current == null) return;
+            const dx = e.changedTouches[0].clientX - touchStartX.current;
+            touchStartX.current = null;
+            if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
+          }}
+        >
+          {pageCount > 1 ? (
             <button
-              key={g.id}
               type="button"
-              onClick={() => setOpenId(g.id)}
-              className="rounded p-3 border text-center"
+              onClick={() => goTo(current - 1)}
+              disabled={current === 0}
+              aria-label={locale === "pt" ? "Anteriores" : "Previous"}
+              className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full border text-2xl leading-none disabled:opacity-30"
               style={{
                 borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
                 backgroundColor: "var(--color-card)",
-                color: "var(--color-card-foreground)",
+                color: "var(--color-primary)",
               }}
             >
-              {g.iconSvg ? (
-                <div
-                  className="w-full aspect-square rounded mb-2 flex items-center justify-center overflow-hidden [&>svg]:max-w-full [&>svg]:max-h-full"
-                  aria-hidden="true"
-                  dangerouslySetInnerHTML={{ __html: g.iconSvg }}
-                />
-              ) : photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo} alt={pickText(g.titlePt, g.titleEn, locale)} className="w-full aspect-square object-cover rounded mb-2" />
-              ) : (
-                <div className="w-full aspect-square rounded mb-2" style={{ backgroundColor: "var(--color-muted)" }} />
-              )}
-              <p className="text-sm font-medium">{pickText(g.titlePt, g.titleEn, locale)}</p>
-              {g.suggestedAmountCents != null ? (
-                <p className="text-base font-semibold opacity-90">{formatBrl(g.suggestedAmountCents)}</p>
-              ) : null}
+              ‹
             </button>
-          );
-        })}
+          ) : null}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {pageItems.map((g) => {
+              const photo = resolvePhoto(g.photoStoragePath);
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setOpenId(g.id)}
+                  className="rounded p-3 border text-center"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                    backgroundColor: "var(--color-card)",
+                    color: "var(--color-card-foreground)",
+                  }}
+                >
+                  {g.iconSvg ? (
+                    <div
+                      className="w-full aspect-square rounded mb-2 flex items-center justify-center overflow-hidden [&>svg]:max-w-full [&>svg]:max-h-full"
+                      aria-hidden="true"
+                      dangerouslySetInnerHTML={{ __html: g.iconSvg }}
+                    />
+                  ) : photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo} alt={pickText(g.titlePt, g.titleEn, locale)} className="w-full aspect-square object-cover rounded mb-2" />
+                  ) : (
+                    <div className="w-full aspect-square rounded mb-2" style={{ backgroundColor: "var(--color-muted)" }} />
+                  )}
+                  <p className="text-sm font-medium">{pickText(g.titlePt, g.titleEn, locale)}</p>
+                  {g.suggestedAmountCents != null ? (
+                    <p className="text-base font-semibold opacity-90">{formatBrl(g.suggestedAmountCents)}</p>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          {pageCount > 1 ? (
+            <button
+              type="button"
+              onClick={() => goTo(current + 1)}
+              disabled={current === pageCount - 1}
+              aria-label={locale === "pt" ? "Próximos" : "Next"}
+              className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full border text-2xl leading-none disabled:opacity-30"
+              style={{
+                borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                backgroundColor: "var(--color-card)",
+                color: "var(--color-primary)",
+              }}
+            >
+              ›
+            </button>
+          ) : null}
+        </div>
+        {pageCount > 1 ? (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            {Array.from({ length: pageCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`${locale === "pt" ? "Página" : "Page"} ${i + 1}`}
+                aria-current={i === current}
+                className="h-2.5 rounded-full transition-all"
+                style={{
+                  width: i === current ? "1.5rem" : "0.625rem",
+                  backgroundColor:
+                    i === current
+                      ? "var(--color-primary)"
+                      : "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+                }}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
       {open ? (
         <GiftDialog
