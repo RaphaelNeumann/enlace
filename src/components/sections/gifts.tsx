@@ -436,14 +436,28 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, mercadoPa
             e.preventDefault();
             sendMessage(e.currentTarget);
           }}
-          className="space-y-2 border-t pt-2 mt-1"
+          className="space-y-3 rounded-md p-4 mt-4 text-left"
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, var(--color-card))",
+            color: "var(--color-card-foreground)",
+          }}
         >
-          <p className="text-xs uppercase tracking-widest opacity-70">Mensagem para os noivos</p>
+          <p
+            className="text-sm uppercase tracking-widest font-medium"
+            style={{ color: "var(--color-primary)" }}
+          >
+            Mensagem para os noivos
+          </p>
           <input
             name="senderName"
             placeholder="Seu nome"
             required
             className="w-full rounded border px-3 py-2 text-sm"
+            style={{
+              backgroundColor: "var(--color-card)",
+              borderColor: "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              color: "var(--color-card-foreground)",
+            }}
           />
           <textarea
             name="message"
@@ -452,11 +466,20 @@ function GiftDialog({ gift, locale, pixBrCode, pixKey, hasMercadoPago, mercadoPa
             maxLength={500}
             required
             className="w-full rounded border px-3 py-2 text-sm"
+            style={{
+              backgroundColor: "var(--color-card)",
+              borderColor: "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              color: "var(--color-card-foreground)",
+            }}
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded border px-3 py-1 text-sm"
+            className="rounded px-4 py-2 text-sm font-medium disabled:opacity-60"
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-primary-foreground)",
+            }}
           >
             {pending ? "Enviando..." : "Enviar mensagem"}
           </button>
