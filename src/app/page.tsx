@@ -22,6 +22,19 @@ import {
 } from "@/app/api/gifts/checkout/actions";
 import { SiteFooter, formatCoupleNames } from "@/components/site-footer";
 
+// Fisher-Yates shuffle. Runs per request on the server (the page is dynamic),
+// so the gift catalog is shown in a fresh random order on every load. Shuffling
+// here (not on the client) keeps server and client markup in sync — the client
+// receives the already-shuffled array as a prop.
+function shuffle<T>(items: readonly T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default async function HomePage() {
   const [settings, programacao, dress, story, faq, tipCategories, gifts, photos] =
     await Promise.all([
@@ -85,7 +98,7 @@ export default async function HomePage() {
       ) : null}
       {settings.showGifts ? (
         <GiftsSection
-          gifts={gifts}
+          gifts={shuffle(gifts)}
           locale="pt"
           pixBrCodeMap={pixBrCodeMap}
           pixKey={pixKey}
