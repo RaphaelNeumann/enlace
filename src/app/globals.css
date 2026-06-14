@@ -127,6 +127,8 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+    /* Bump every rem-based text up ~2px for readability (base 16px -> 18px). */
+    font-size: 112.5%;
   }
   /* Offset anchored section headings so they land below the fixed public nav
      (h-20 = 5rem) with some breathing room. */

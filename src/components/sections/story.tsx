@@ -76,7 +76,7 @@ export function Story({ content, locale = "pt", supabaseProjectUrl }: StoryProps
           {body ? (
             <Markdown
               source={body}
-              className="text-base leading-relaxed text-justify hyphens-auto"
+              className="text-lg leading-relaxed text-justify hyphens-auto"
             />
           ) : null}
         </div>
