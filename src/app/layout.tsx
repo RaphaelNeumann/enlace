@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { theme } from "@/config/wedding.config";
 import { themeToCssBlock } from "@/lib/theme";
 import { allFontVariables } from "@/lib/theme/fonts";
-import { getSiteSettings } from "@/lib/site-settings/get";
+import { getCachedSiteSettings } from "@/lib/site-content";
 import "./globals.css";
 
 // Every route is dynamic by design: the nonce-based CSP (proxy.ts) and the
@@ -26,7 +26,7 @@ function coupleTitle(s: {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  const settings = await getCachedSiteSettings();
   return {
     title: coupleTitle(settings),
     description: settings.metaDescriptionPt || "Wedding website",

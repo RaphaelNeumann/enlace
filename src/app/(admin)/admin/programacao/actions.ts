@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import { adminUpdateProgramacaoCard } from "@/lib/programacao/db";
 
@@ -25,5 +26,6 @@ export async function updateCardAction(id: "ceremony" | "reception", formData: F
   if (obj.isVisible !== true) obj.isVisible = false;
   await adminUpdateProgramacaoCard(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.programacao, "max");
   revalidatePath("/admin/programacao");
 }

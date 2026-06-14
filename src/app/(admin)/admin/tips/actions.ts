@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import {
   adminCreateCategory,
@@ -30,6 +31,7 @@ export async function createCategoryAction(formData: FormData): Promise<void> {
   obj.isVisible = obj.isVisible === true;
   await adminCreateCategory(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }
 export async function updateCategoryAction(id: string, formData: FormData): Promise<void> {
@@ -38,12 +40,14 @@ export async function updateCategoryAction(id: string, formData: FormData): Prom
   obj.isVisible = obj.isVisible === true;
   await adminUpdateCategory(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }
 export async function deleteCategoryAction(id: string): Promise<void> {
   const session = await auth();
   await adminDeleteCategory(id, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }
 export async function createTipAction(formData: FormData): Promise<void> {
@@ -52,6 +56,7 @@ export async function createTipAction(formData: FormData): Promise<void> {
   obj.isVisible = obj.isVisible === true;
   await adminCreateTip(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }
 export async function updateTipAction(id: string, formData: FormData): Promise<void> {
@@ -60,11 +65,13 @@ export async function updateTipAction(id: string, formData: FormData): Promise<v
   obj.isVisible = obj.isVisible === true;
   await adminUpdateTip(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }
 export async function deleteTipAction(id: string): Promise<void> {
   const session = await auth();
   await adminDeleteTip(id, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.tips, "max");
   revalidatePath("/admin/tips");
 }

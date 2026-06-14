@@ -1,11 +1,13 @@
-import { getSiteSettings } from "@/lib/site-settings/get";
-import { getDressCode } from "@/lib/dress-code/db";
-import { getStoryContent } from "@/lib/story/db";
-import { listProgramacao } from "@/lib/programacao/db";
-import { listFaq } from "@/lib/faq/db";
-import { listVisibleCategoriesWithTips } from "@/lib/tips/db";
-import { listGifts } from "@/lib/gifts/db";
-import { listPhotos } from "@/lib/photos/db";
+import {
+  getCachedSiteSettings,
+  getCachedDressCode,
+  getCachedStoryContent,
+  getCachedProgramacao,
+  getCachedFaq,
+  getCachedTipCategories,
+  getCachedGifts,
+  getCachedPhotos,
+} from "@/lib/site-content";
 import { Hero } from "@/components/sections/hero";
 import { PhotoGallerySection } from "@/components/sections/photo-gallery";
 import { Programacao } from "@/components/sections/programacao";
@@ -25,14 +27,14 @@ import { SiteFooter, formatCoupleNames } from "@/components/site-footer";
 export default async function HomePage() {
   const [settings, programacao, dress, story, faq, tipCategories, gifts, photos] =
     await Promise.all([
-      getSiteSettings(),
-      listProgramacao(),
-      getDressCode(),
-      getStoryContent(),
-      listFaq({ onlyVisible: true }),
-      listVisibleCategoriesWithTips(),
-      listGifts({ onlyVisible: true }),
-      listPhotos({ onlyVisible: true }),
+      getCachedSiteSettings(),
+      getCachedProgramacao(),
+      getCachedDressCode(),
+      getCachedStoryContent(),
+      getCachedFaq(),
+      getCachedTipCategories(),
+      getCachedGifts(),
+      getCachedPhotos(),
     ]);
   const coupleNames = formatCoupleNames({
     partner1Name: settings.partner1Name,

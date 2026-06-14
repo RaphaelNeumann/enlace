@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import { adminUpdateStory } from "@/lib/story/db";
 
@@ -20,5 +21,6 @@ export async function updateStoryAction(formData: FormData): Promise<void> {
   }
   await adminUpdateStory(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.story, "max");
   revalidatePath("/admin/story");
 }

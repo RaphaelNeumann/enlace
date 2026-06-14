@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import { adminUpdateDressCode } from "@/lib/dress-code/db";
 
@@ -24,5 +25,6 @@ export async function updateDressCodeAction(formData: FormData): Promise<void> {
   }
   await adminUpdateDressCode(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.dressCode, "max");
   revalidatePath("/admin/dress-code");
 }

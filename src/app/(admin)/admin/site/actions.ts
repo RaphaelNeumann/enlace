@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import { adminUpdateSiteSettings } from "@/lib/site-settings/admin-update";
 
@@ -9,6 +10,7 @@ export async function updateSiteSettingsAction(formData: FormData): Promise<void
   const input = formDataToInput(formData);
   await adminUpdateSiteSettings(input, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.siteSettings, "max");
   revalidatePath("/admin/site");
 }
 

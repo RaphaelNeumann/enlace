@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import {
   adminCreatePhoto,
@@ -27,6 +28,7 @@ export async function createPhotoAction(formData: FormData): Promise<void> {
   obj.isVisible = obj.isVisible === true;
   await adminCreatePhoto(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.photos, "max");
   revalidatePath("/admin/photos");
 }
 
@@ -36,6 +38,7 @@ export async function updatePhotoAction(id: string, formData: FormData): Promise
   obj.isVisible = obj.isVisible === true;
   await adminUpdatePhoto(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.photos, "max");
   revalidatePath("/admin/photos");
 }
 
@@ -43,5 +46,6 @@ export async function deletePhotoAction(id: string): Promise<void> {
   const session = await auth();
   await adminDeletePhoto(id, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.photos, "max");
   revalidatePath("/admin/photos");
 }

@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import {
   adminCreateGift,
@@ -38,6 +39,7 @@ export async function createGiftAction(formData: FormData): Promise<void> {
   obj.allowAmountOverride = obj.allowAmountOverride === true;
   await adminCreateGift(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.gifts, "max");
   revalidatePath("/admin/gifts");
 }
 
@@ -48,6 +50,7 @@ export async function updateGiftAction(id: string, formData: FormData): Promise<
   obj.allowAmountOverride = obj.allowAmountOverride === true;
   await adminUpdateGift(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.gifts, "max");
   revalidatePath("/admin/gifts");
 }
 
@@ -55,5 +58,6 @@ export async function deleteGiftAction(id: string): Promise<void> {
   const session = await auth();
   await adminDeleteGift(id, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.gifts, "max");
   revalidatePath("/admin/gifts");
 }

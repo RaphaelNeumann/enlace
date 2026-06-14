@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CONTENT_TAGS } from "@/lib/content-tags";
 import { auth } from "@/lib/auth";
 import { adminCreateFaq, adminUpdateFaq, adminDeleteFaq, adminReorderFaq } from "@/lib/faq/db";
 
@@ -23,6 +24,7 @@ export async function createFaqAction(formData: FormData): Promise<void> {
   obj.isVisible = obj.isVisible === true;
   await adminCreateFaq(obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.faq, "max");
   revalidatePath("/admin/faq");
 }
 
@@ -32,6 +34,7 @@ export async function updateFaqAction(id: string, formData: FormData): Promise<v
   obj.isVisible = obj.isVisible === true;
   await adminUpdateFaq(id, obj, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.faq, "max");
   revalidatePath("/admin/faq");
 }
 
@@ -39,6 +42,7 @@ export async function deleteFaqAction(id: string): Promise<void> {
   const session = await auth();
   await adminDeleteFaq(id, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.faq, "max");
   revalidatePath("/admin/faq");
 }
 
@@ -46,5 +50,6 @@ export async function reorderFaqAction(ids: string[]): Promise<void> {
   const session = await auth();
   await adminReorderFaq({ ids }, session);
   revalidatePath("/", "layout");
+  revalidateTag(CONTENT_TAGS.faq, "max");
   revalidatePath("/admin/faq");
 }
