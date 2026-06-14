@@ -118,7 +118,7 @@ export function GiftsSection(props: GiftsSectionProps) {
               )}
               <p className="text-sm font-medium">{pickText(g.titlePt, g.titleEn, locale)}</p>
               {g.suggestedAmountCents != null ? (
-                <p className="text-xs opacity-70">{formatBrl(g.suggestedAmountCents)}</p>
+                <p className="text-sm font-medium opacity-80">{formatBrl(g.suggestedAmountCents)}</p>
               ) : null}
             </button>
           );
