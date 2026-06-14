@@ -12,6 +12,7 @@ import {
 const NULLABLE = new Set([
   "titleEn",
   "descriptionEn",
+  "iconSvg",
   "photoStoragePath",
   "externalUrl",
   "suggestedAmountCents",

@@ -232,6 +232,10 @@ export const gifts = pgTable("gifts", {
   titleEn: text("title_en"),
   descriptionPt: text("description_pt").notNull().default(""),
   descriptionEn: text("description_en"),
+  /** Optional inline SVG markup shown in the card's image slot instead of a
+   *  photo. Takes precedence over photoStoragePath. Rendered via
+   *  dangerouslySetInnerHTML — admin-only content. */
+  iconSvg: text("icon_svg"),
   photoStoragePath: text("photo_storage_path"),
   externalUrl: text("external_url"),
   suggestedAmountCents: integer("suggested_amount_cents"),

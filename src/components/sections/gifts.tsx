@@ -104,7 +104,13 @@ export function GiftsSection(props: GiftsSectionProps) {
                 color: "var(--color-card-foreground)",
               }}
             >
-              {photo ? (
+              {g.iconSvg ? (
+                <div
+                  className="w-full aspect-square rounded mb-2 flex items-center justify-center overflow-hidden [&>svg]:max-w-full [&>svg]:max-h-full"
+                  aria-hidden="true"
+                  dangerouslySetInnerHTML={{ __html: g.iconSvg }}
+                />
+              ) : photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photo} alt={pickText(g.titlePt, g.titleEn, locale)} className="w-full aspect-square object-cover rounded mb-2" />
               ) : (

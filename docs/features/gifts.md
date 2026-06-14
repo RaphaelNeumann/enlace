@@ -59,6 +59,10 @@ gifts: {
   titleEn: text (nullable — falls back to titlePt when missing)
   descriptionPt: text
   descriptionEn: text (nullable — falls back to descriptionPt)
+  iconSvg: text (nullable — inline <svg> markup shown in the card's image slot
+    instead of a photo; takes precedence over photoStoragePath. Admin-only
+    content rendered via dangerouslySetInnerHTML; <script>/event handlers are
+    inert under the nonce CSP.)
   photoStoragePath: text (nullable)
   externalUrl: text (nullable)
   suggestedAmountCents: integer (nullable — when null, the QR has no fixed amount and the credit-card option is hidden)

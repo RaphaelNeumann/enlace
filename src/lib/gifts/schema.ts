@@ -16,6 +16,7 @@ export const giftCreateSchema = z.object({
   titleEn: textOptional(120),
   descriptionPt: z.string().trim().max(1000).default(""),
   descriptionEn: z.string().trim().max(1000).optional().nullable(),
+  iconSvg: z.string().trim().max(20_000).optional().nullable(),
   photoStoragePath: z.string().trim().max(500).optional().nullable(),
   externalUrl: httpsUrlOptional,
   suggestedAmountCents: z.number().int().nonnegative().max(100_000_000).optional().nullable(),

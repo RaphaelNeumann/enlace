@@ -23,6 +23,12 @@ export default async function AdminGiftsPage() {
           <textarea name="descriptionPt" rows={3} placeholder="Descrição (PT)" className="w-full rounded border px-3 py-2" />
           <textarea name="descriptionEn" rows={3} placeholder="Description (EN)" className="w-full rounded border px-3 py-2" />
           <UploadField bucket="gifts" pathFieldName="photoStoragePath" label="Foto" />
+          <textarea
+            name="iconSvg"
+            rows={4}
+            placeholder="SVG (cole o markup <svg>…</svg> — substitui a foto se preenchido)"
+            className="w-full rounded border px-3 py-2 font-mono text-xs"
+          />
           <input name="externalUrl" placeholder="https://..." className="w-full rounded border px-3 py-2" />
           <input
             name="suggestedAmountCents"
@@ -62,6 +68,13 @@ export default async function AdminGiftsPage() {
                 pathFieldName="photoStoragePath"
                 label="Foto"
                 defaultPath={g.photoStoragePath}
+              />
+              <textarea
+                name="iconSvg"
+                defaultValue={g.iconSvg ?? ""}
+                rows={4}
+                placeholder="SVG (substitui a foto se preenchido)"
+                className="w-full rounded border px-3 py-2 font-mono text-xs"
               />
               <input name="externalUrl" defaultValue={g.externalUrl ?? ""} className="w-full rounded border px-3 py-2" />
               <input
