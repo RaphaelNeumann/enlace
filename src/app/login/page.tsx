@@ -1,24 +1,9 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import { auth, signIn } from "@/lib/auth";
 import { isAdminRole } from "@/lib/server-auth/assert-role";
 import { getSiteSettings } from "@/lib/site-settings/get";
 import { Monogram } from "@/components/monogram";
-
-async function getCsrfToken(): Promise<string | null> {
-  try {
-    const h = await headers();
-    const host = h.get("host") ?? "localhost:3000";
-    const proto = h.get("x-forwarded-proto") ?? "http";
-    const url = `${proto}://${host}/api/auth/csrf`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { csrfToken?: string };
-    return data.csrfToken ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export default async function LoginPage({
   searchParams,
@@ -30,8 +15,24 @@ export default async function LoginPage({
   if (isAdminRole(session?.user?.role)) {
     redirect(sp.callbackUrl ?? "/admin");
   }
-  const [csrf, settings] = await Promise.all([getCsrfToken(), getSiteSettings()]);
+  const settings = await getSiteSettings();
   const callbackUrl = sp.callbackUrl ?? "/admin";
+
+  async function sendMagicLink(formData: FormData): Promise<void> {
+    "use server";
+    try {
+      // Server-side signIn runs with skipCSRFCheck and writes the auth
+      // cookies straight to the browser, so it avoids the double-submit
+      // CSRF cookie mismatch that a raw POST to /api/auth/signin/resend hits.
+      await signIn("resend", formData);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        redirect(`/login?error=${error.type}`);
+      }
+      throw error;
+    }
+  }
+
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
       <div
@@ -68,13 +69,8 @@ export default async function LoginPage({
             {mapErrorMessage(sp.error)}
           </p>
         ) : null}
-        <form
-          method="post"
-          action="/api/auth/signin/resend"
-          className="space-y-3 text-left"
-        >
-          {csrf ? <input type="hidden" name="csrfToken" value={csrf} /> : null}
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        <form action={sendMagicLink} className="space-y-3 text-left">
+          <input type="hidden" name="redirectTo" value={callbackUrl} />
           <label className="block text-sm">
             <span className="font-medium">E-mail</span>
             <input
@@ -109,6 +105,7 @@ function mapErrorMessage(code: string): string {
     case "Verification":
       return "O link expirou ou já foi utilizado. Solicite um novo.";
     case "EmailSignin":
+    case "Resend":
       return "Falha ao enviar o e-mail. Tente novamente em alguns minutos.";
     case "Configuration":
       return "Configuração do servidor incompleta. Avise o casal.";
