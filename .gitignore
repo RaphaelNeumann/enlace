@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Claude Code settings
+.claude/
+
+# database dumps at repo root (contain session tokens + guest PII — never
+# commit). Root-anchored so it never matches tracked drizzle/*.sql migrations.
+/*.sql
