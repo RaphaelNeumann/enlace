@@ -18,7 +18,7 @@ export function FaqSection({ entries, locale = "pt" }: FaqSectionProps) {
       <h2
         id="faq-heading"
         className="text-7xl md:text-8xl text-center mb-10"
-        style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
+        style={{ fontFamily: "var(--font-display)", color: "#ffffff" }}
       >
         {locale === "pt" ? "Perguntas frequentes" : "FAQ"}
       </h2>
