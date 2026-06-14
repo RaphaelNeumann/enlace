@@ -97,7 +97,7 @@ export function GiftsSection(props: GiftsSectionProps) {
       >
         {locale === "pt" ? "Lista de presentes" : "Gift catalog"}
       </h2>
-      <p className="text-center text-sm opacity-70 mb-10 max-w-xl mx-auto">
+      <p className="text-center text-base opacity-70 mb-10 max-w-xl mx-auto">
         {locale === "pt"
           ? "Os valores são apenas sugestões — sinta-se à vontade para alterá-los."
           : "The amounts are only suggestions — feel free to change them."}
