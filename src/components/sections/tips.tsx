@@ -26,7 +26,7 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
       >
         {locale === "pt" ? "Dicas" : "Tips"}
       </h2>
-      <div className="mx-auto max-w-3xl grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-3 gap-4">
         {categories.map((cat) => (
           <button
             key={cat.id}

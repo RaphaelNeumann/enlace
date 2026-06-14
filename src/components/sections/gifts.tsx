@@ -76,7 +76,7 @@ export function GiftsSection(props: GiftsSectionProps) {
   if (visible.length === 0) return null;
   const open = visible.find((g) => g.id === openId) ?? null;
   // Gallery: show 6 cards per page; arrows (desktop) / swipe (mobile) page through.
-  const pageSize = 8;
+  const pageSize = 12;
   const pageCount = Math.ceil(visible.length / pageSize);
   const current = Math.min(page, pageCount - 1);
   const pageItems = visible.slice(current * pageSize, current * pageSize + pageSize);
@@ -102,7 +102,7 @@ export function GiftsSection(props: GiftsSectionProps) {
           ? "Os valores são apenas sugestões — sinta-se à vontade para alterá-los."
           : "The amounts are only suggestions — feel free to change them."}
       </p>
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         <div
           className="relative"
           onTouchStart={(e) => {
@@ -131,7 +131,7 @@ export function GiftsSection(props: GiftsSectionProps) {
               ‹
             </button>
           ) : null}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {pageItems.map((g) => {
               const photo = resolvePhoto(g.photoStoragePath);
               return (

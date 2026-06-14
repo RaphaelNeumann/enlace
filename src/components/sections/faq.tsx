@@ -22,7 +22,7 @@ export function FaqSection({ entries, locale = "pt" }: FaqSectionProps) {
       >
         {locale === "pt" ? "Perguntas frequentes" : "FAQ"}
       </h2>
-      <div className="mx-auto max-w-2xl space-y-3">
+      <div className="mx-auto max-w-5xl space-y-3">
         {visible.map((entry) => (
           <details
             key={entry.id}
