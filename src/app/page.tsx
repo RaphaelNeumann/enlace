@@ -39,6 +39,8 @@ export default async function HomePage() {
     partner2Name: settings.partner2Name,
     partnersOrder: settings.partnersOrder,
   });
+  const showTipsSection = settings.showTips && tipCategories.length > 0;
+  const showFaqSection = settings.showFaq && faq.length > 0;
   const supabaseProjectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined;
   const pixKey = process.env.PIX_KEY?.trim() ?? null;
   const pixRecipient = process.env.PIX_RECIPIENT_NAME?.trim() ?? null;
@@ -97,8 +99,22 @@ export default async function HomePage() {
           recomputePixAction={recomputePixBrCodeAction}
         />
       ) : null}
-      {settings.showTips ? <TipsSection categories={tipCategories} locale="pt" /> : null}
-      {settings.showFaq ? <FaqSection entries={faq} locale="pt" /> : null}
+      {(showTipsSection || showFaqSection) ? (
+        // Tips and FAQ share a single sage-tinted band (the tint Programação
+        // and Nossa História also use) so they read as one section. space-y
+        // separates the two sub-sections when both are shown.
+        <section
+          className="py-20 px-6 space-y-20"
+          style={{
+            backgroundColor: "color-mix(in srgb, #7c8150 55%, transparent)",
+          }}
+        >
+          {showTipsSection ? (
+            <TipsSection categories={tipCategories} locale="pt" />
+          ) : null}
+          {showFaqSection ? <FaqSection entries={faq} locale="pt" /> : null}
+        </section>
+      ) : null}
       {settings.showPhotoGallery ? (
         <PhotoGallerySection photos={photos} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
       ) : null}

@@ -14,19 +14,10 @@ export function FaqSection({ entries, locale = "pt" }: FaqSectionProps) {
   const visible = entries.filter((e) => e.isVisible);
   if (visible.length === 0) return null;
   return (
-    <section
-      className="py-20 px-6"
-      aria-labelledby="faq-heading"
-      style={{
-        // Match the sage tint used by Programação and Nossa História so the
-        // FAQ reads as a separated band breaking up the cream sections
-        // around it (gifts above, footer below).
-        backgroundColor: "color-mix(in srgb, #7c8150 55%, transparent)",
-      }}
-    >
+    <section aria-labelledby="faq-heading">
       <h2
         id="faq-heading"
-        className="text-4xl text-center mb-10"
+        className="text-7xl md:text-8xl text-center mb-10"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
       >
         {locale === "pt" ? "Perguntas frequentes" : "FAQ"}

@@ -18,10 +18,10 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
   if (categories.length === 0) return null;
   const open = categories.find((c) => c.id === openId) ?? null;
   return (
-    <section className="py-20 px-6" aria-labelledby="tips-heading">
+    <section aria-labelledby="tips-heading">
       <h2
         id="tips-heading"
-        className="text-4xl text-center mb-10"
+        className="text-7xl md:text-8xl text-center mb-10"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
       >
         {locale === "pt" ? "Dicas" : "Tips"}
