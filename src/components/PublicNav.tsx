@@ -9,9 +9,10 @@ export interface PublicNavItem {
 }
 
 /**
- * Fixed top navigation for the public home page. Hidden while the hero is on
- * screen and slides in once the hero has scrolled out of view (observed via
- * IntersectionObserver on the `#hero` section).
+ * Fixed top navigation for the public home page. Hidden while the hero's date +
+ * countdown are on screen and slides in once the illustration point
+ * (`#nav-trigger`) scrolls past the top. Links highlight (filled background) on
+ * hover or while their section is the one currently in view (scroll-spy).
  */
 export function PublicNav({
   items,
@@ -21,17 +22,49 @@ export function PublicNav({
   brand?: string;
 }) {
   const [shown, setShown] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | null>(null);
+  const [hoverHref, setHoverHref] = useState<string | null>(null);
 
+  // Reveal once the hero point just after the date + countdown scrolls above the
+  // top of the viewport (where the illustration begins).
   useEffect(() => {
-    const hero = document.getElementById("hero");
-    if (!hero) return;
+    const trigger = document.getElementById("nav-trigger");
+    if (!trigger) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setShown(!entry.isIntersecting),
+      ([entry]) => setShown(entry.boundingClientRect.top < 0),
       { threshold: 0 },
     );
-    observer.observe(hero);
+    observer.observe(trigger);
     return () => observer.disconnect();
   }, []);
+
+  // Scroll-spy: mark the link whose section is currently on screen.
+  useEffect(() => {
+    const targets = items
+      .map((item) => {
+        const heading = document.getElementById(item.href.slice(1));
+        const section = heading?.closest("section") ?? null;
+        return section ? { href: item.href, section } : null;
+      })
+      .filter((t): t is { href: string; section: Element } => t !== null);
+    if (targets.length === 0) return;
+    const hrefByEl = new Map(targets.map((t) => [t.section, t.href]));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (visible.length === 0) return;
+        const topmost = visible.reduce((a, b) =>
+          a.boundingClientRect.top <= b.boundingClientRect.top ? a : b,
+        );
+        const href = hrefByEl.get(topmost.target);
+        if (href) setActiveHref(href);
+      },
+      // Active band sits in the upper third of the viewport.
+      { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+    );
+    targets.forEach((t) => observer.observe(t.section));
+    return () => observer.disconnect();
+  }, [items]);
 
   if (items.length === 0) return null;
 
@@ -49,7 +82,7 @@ export function PublicNav({
         borderColor: "color-mix(in srgb, var(--color-primary) 20%, transparent)",
       }}
     >
-      <div className="mx-auto max-w-5xl px-6 h-20 flex items-center gap-3 overflow-x-auto">
+      <div className="mx-auto max-w-5xl px-6 h-20 flex items-center gap-2 overflow-x-auto">
         {brand ? (
           <a
             href="#hero"
@@ -62,20 +95,27 @@ export function PublicNav({
             {brand}
           </a>
         ) : null}
-        {items.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs uppercase tracking-widest transition hover:opacity-75"
-            style={{
-              borderColor: "color-mix(in srgb, var(--color-primary) 35%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
-              color: "var(--color-foreground)",
-            }}
-          >
-            {item.label}
-          </a>
-        ))}
+        {items.map((item) => {
+          const filled = activeHref === item.href || hoverHref === item.href;
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              onMouseEnter={() => setHoverHref(item.href)}
+              onMouseLeave={() =>
+                setHoverHref((h) => (h === item.href ? null : h))
+              }
+              className="shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs uppercase tracking-widest transition-colors"
+              style={{
+                backgroundColor: filled
+                  ? "color-mix(in srgb, var(--color-primary) 16%, transparent)"
+                  : "transparent",
+              }}
+            >
+              {item.label}
+            </a>
+          );
+        })}
       </div>
     </nav>
   );

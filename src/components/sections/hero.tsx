@@ -135,6 +135,9 @@ export function Hero({
                   : `${countdown.daysRemaining} day${countdown.daysRemaining === 1 ? "" : "s"} to go`}
             </p>
           ) : null}
+          {/* The public nav fades in once this point (just after the date +
+              countdown, where the illustration begins) scrolls past the top. */}
+          <div id="nav-trigger" aria-hidden="true" />
         </div>
         {heroIllustrationUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

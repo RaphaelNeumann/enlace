@@ -128,8 +128,9 @@
     @apply font-sans;
     scroll-behavior: smooth;
   }
-  /* Offset anchored section headings so they land below the fixed public nav. */
+  /* Offset anchored section headings so they land below the fixed public nav
+     (h-20 = 5rem) with some breathing room. */
   [id$="-heading"] {
-    scroll-margin-top: 5rem;
+    scroll-margin-top: 7.5rem;
   }
 }
