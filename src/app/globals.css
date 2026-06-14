@@ -126,5 +126,10 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  /* Offset anchored section headings so they land below the fixed public nav. */
+  [id$="-heading"] {
+    scroll-margin-top: 5rem;
   }
 }

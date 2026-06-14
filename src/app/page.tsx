@@ -21,6 +21,7 @@ import {
   recomputePixBrCodeAction,
 } from "@/app/api/gifts/checkout/actions";
 import { SiteFooter, formatCoupleNames } from "@/components/site-footer";
+import { PublicNav } from "@/components/PublicNav";
 
 // Fisher-Yates shuffle. Runs per request on the server (the page is dynamic),
 // so the gift catalog is shown in a fresh random order on every load. Shuffling
@@ -54,6 +55,22 @@ export default async function HomePage() {
   });
   const showTipsSection = settings.showTips && tipCategories.length > 0;
   const showFaqSection = settings.showFaq && faq.length > 0;
+  // Links for the floating public nav — only sections that are actually shown.
+  const navItems = [
+    settings.showCeremonyReception && programacao.length > 0
+      ? { href: "#programacao-heading", label: "Programação" }
+      : null,
+    settings.showDressCode ? { href: "#dress-code-heading", label: "Traje" } : null,
+    settings.showStory ? { href: "#story-heading", label: "Nossa história" } : null,
+    settings.showGifts && gifts.length > 0
+      ? { href: "#gifts-heading", label: "Presentes" }
+      : null,
+    showTipsSection ? { href: "#tips-heading", label: "Dicas" } : null,
+    showFaqSection ? { href: "#faq-heading", label: "FAQ" } : null,
+    settings.showPhotoGallery && photos.length > 0
+      ? { href: "#gallery-heading", label: "Galeria" }
+      : null,
+  ].filter((i): i is { href: string; label: string } => i !== null);
   const supabaseProjectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined;
   const pixKey = process.env.PIX_KEY?.trim() ?? null;
   const pixRecipient = process.env.PIX_RECIPIENT_NAME?.trim() ?? null;
@@ -80,6 +97,7 @@ export default async function HomePage() {
   }
   return (
     <main className="flex-1">
+      <PublicNav items={navItems} brand={coupleNames} />
       {settings.showHero ? (
         <Hero settings={settings} locale="pt" supabaseProjectUrl={supabaseProjectUrl} />
       ) : null}

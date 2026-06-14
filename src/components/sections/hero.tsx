@@ -60,7 +60,7 @@ export function Hero({
   // elements inherit via `currentColor` (border + text).
   const cardTone = "#434c1f";
   return (
-    <section className="py-16 px-6" aria-labelledby="hero-heading">
+    <section id="hero" className="py-16 px-6" aria-labelledby="hero-heading">
       {/*
         The hero content sits inside a centred bordered card so the section
         reads as the wedding invitation itself — `currentColor` everywhere
