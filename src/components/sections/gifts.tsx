@@ -92,11 +92,16 @@ export function GiftsSection(props: GiftsSectionProps) {
     <section className="py-20 px-6" aria-labelledby="gifts-heading">
       <h2
         id="gifts-heading"
-        className="text-7xl md:text-8xl text-center mb-10"
+        className="text-7xl md:text-8xl text-center mb-4"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
       >
         {locale === "pt" ? "Lista de presentes" : "Gift catalog"}
       </h2>
+      <p className="text-center text-sm opacity-70 mb-10 max-w-xl mx-auto">
+        {locale === "pt"
+          ? "Os valores são apenas sugestões — sinta-se à vontade para alterá-los."
+          : "The amounts are only suggestions — feel free to change them."}
+      </p>
       <div className="mx-auto max-w-4xl">
         <div
           className="relative"
