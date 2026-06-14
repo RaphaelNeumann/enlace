@@ -40,15 +40,12 @@ export function PublicNav({
 
   // Scroll-spy: mark the link whose section is currently on screen.
   useEffect(() => {
-    const targets = items
-      .map((item) => {
-        const heading = document.getElementById(item.href.slice(1));
-        const section = heading?.closest("section") ?? null;
-        return section ? { href: item.href, section } : null;
-      })
-      .filter((t): t is { href: string; section: Element } => t !== null);
-    if (targets.length === 0) return;
-    const hrefByEl = new Map(targets.map((t) => [t.section, t.href]));
+    const hrefByEl = new Map<Element, string>();
+    for (const item of items) {
+      const section = document.getElementById(item.href.slice(1))?.closest("section");
+      if (section) hrefByEl.set(section, item.href);
+    }
+    if (hrefByEl.size === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting);
@@ -62,7 +59,7 @@ export function PublicNav({
       // Active band sits in the upper third of the viewport.
       { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
     );
-    targets.forEach((t) => observer.observe(t.section));
+    hrefByEl.forEach((_, el) => observer.observe(el));
     return () => observer.disconnect();
   }, [items]);
 
