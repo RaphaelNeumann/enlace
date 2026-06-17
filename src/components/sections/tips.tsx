@@ -22,7 +22,7 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
       <h2
         id="tips-heading"
         className="text-7xl md:text-8xl text-center mb-10"
-        style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-primary-foreground)" }}
       >
         {locale === "pt" ? "Dicas" : "Tips"}
       </h2>
@@ -32,7 +32,7 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
             key={cat.id}
             type="button"
             onClick={() => setOpenId(cat.id)}
-            className="rounded p-4 border text-center"
+            className="rounded p-2 border text-center"
             style={{
               borderColor: "color-mix(in srgb, var(--color-primary) 40%, transparent)",
               backgroundColor: "var(--color-card)",
@@ -40,8 +40,8 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
             }}
           >
             <span
-              className="block text-2xl mb-2"
-              style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
+              className="block text-[1.7rem] mb-2"
+              style={{ fontFamily: "var(--font-body)", color: "var(--color-primary)" }}
             >
               {pickText(cat.namePt, cat.nameEn, locale)}
             </span>
@@ -72,7 +72,7 @@ export function TipsSection({ categories, locale = "pt" }: TipsSectionProps) {
             </button>
             <h3
               id={`tips-dialog-${open.id}-heading`}
-              className="text-3xl mb-4"
+              className="text-5xl mb-4 text-center"
               style={{ fontFamily: "var(--font-display)", color: "var(--color-primary)" }}
             >
               {pickText(open.namePt, open.nameEn, locale)}
